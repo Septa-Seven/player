@@ -1,0 +1,40 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body{
+    background-color: #1E091C;
+}
+
+.container{
+    width: 60vw;
+    height: 70vh;
+    border: 5px solid #F60264;
+    border-radius: 1px;
+    margin: 20px auto;
+}
+
+#vizualizer{
+    width: 100%;
+    height: 75%;
+    background: #85055A;
+}
+
+.control{
+    text-align: center;
+    padding: 20px 10px;
+}
+
+.button{
+    width: 80px;
+    height: 30px;
+    background-color: #F60264;
+    border: none;
+    color: #fff;
+}
+
+.sliderContainer{
+    width: 90%;;
+    margin: 20px 5% 0 5%;
+}
