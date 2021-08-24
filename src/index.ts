@@ -17,9 +17,11 @@ const gameScene = new GameScene(conainer);
 
 const slider = noUiSlider.create(sliderContainer, {
     start: [0],
+    step: 1,
     range: {
         'min': [0],
-        'max': [session.turns.length - 1]
+        'max': [session.turns.length - 1],
+
     }
 });
 

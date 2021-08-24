@@ -15,25 +15,30 @@ export class Player {
         gameScene.handleStartMessage(session.areas)
         this.gameScene = gameScene;
 
-        slider.on('change', () => {
-            this.rewind(Math.floor(slider.get()));
+        slider.on('update', (turn) => {
+            this.rewind(Math.floor(turn));
         })
+        slider.on('end', () => {
+            this.stop()
+        })
+
         this.slider = slider;
 
         this.currentTurn = 0;
-
         this.drawTurn(this.currentTurn);
     }
 
     play() {
-        console.log('start');
-        const timer = setInterval(() => this.nextTurn(), 200);
-        this.timer = timer;
+        if(!this.timer) {
+            const timer = setInterval(() => this.nextTurn(), 200);
+            this.timer = timer;
+        }
     }
 
     stop() {
         console.log('stop');
         clearInterval(this.timer);
+        this.timer = null;
     }
 
     rewind(logCount) {
