@@ -3,13 +3,13 @@ import {WinnersModel} from './shared/models/WinnersModel'
 import {TurnModel} from './shared/models/TurnModel'
 
 export class Session {
-    areas: AreaModel;
+    config: AreaModel;
     turns: TurnModel[];
     winners: WinnersModel;
 
     constructor(logs) {
         const parsedDate = logs.split('\n');
-        this.areas = JSON.parse(parsedDate[0]);
+        this.config = JSON.parse(parsedDate[0]);
         this.winners = JSON.parse(parsedDate[parsedDate.length - 1]);
 
         const parsedLogs = parsedDate.slice(1, parsedDate.length - 1).map((log) => JSON.parse(log));
@@ -22,7 +22,7 @@ export class Session {
             turns.push(turn);
         }
         this.turns = turns;
-        console.log(this.areas, this.turns, this.winners)
+        console.log(this.config, this.turns, this.winners)
 
     }
 }

@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js';
 import polylabel from 'polylabel';
+import cubick from './assets/images/1.png';
 
 
 const PLAYERS_COLORS = [
@@ -19,7 +20,7 @@ const SELECTED_COLOR = 0x232526;
 const OUTLINE_COLOR = 0x000;
 
 
-class Area {
+export class Area {
     owner: number;
     dices: number;
 
@@ -35,7 +36,7 @@ class Area {
         this.polygon = new PIXI.Polygon(polygon.flat());
     }
 
-    update(owner, dices) {
+    update(owner: number, dices: number) {
         this.owner = owner;
         this.dices = dices;
 
@@ -43,7 +44,7 @@ class Area {
         this.draw(color);
     }
 
-    draw(color) {
+    draw(color: number) {
         this.graphics.clear();
         this.graphics.removeChildren();
 
@@ -60,38 +61,48 @@ class Area {
 }
 
 export class GameScene {
-    graph: number[][];
-    areas: Area[];
-    app: PIXI.Application;
-    graphicsAreas: PIXI.Graphics;
+    private areas: Area[];
+    private app: PIXI.Application;
+    private graphicsAreas: PIXI.Graphics;
+    private sprites: PIXI.Sprite[]
 
-    constructor(container: HTMLElement) {
+    constructor(config, container: HTMLElement) {
         this.graphicsAreas = new PIXI.Graphics();
-
         let app = new PIXI.Application({
             width: container.clientWidth,
             height: container.clientHeight,
             backgroundColor: 0x7e8991,
             antialias: true,
         });
+        
+        console.log(container, 'mem')
         container.appendChild(app.view);
+        
         app.stage.addChild(this.graphicsAreas);
-
         this.app = app;
+
+        this.createAreas(config);
+
+        app.loader.add('cubick', cubick);
+        app.loader.load((loader, resources) => this.initSprites(loader, resources))
     }
 
-    handleStartMessage(data) {
-        console.log(data, 'mem');
+    private initSprites(loader: PIXI.Loader, resources) {
+        for(const resource in resources) {
+            const sprite = new PIXI.Sprite(resources[resource].texture);
+            this.sprites.push(sprite);
+        }
+    }
 
+    private createAreas(config) {
         this.graphicsAreas.removeChildren();
-        this.graph = data.graph;
 
         let minX = Infinity;
         let minY = Infinity;
         let maxX = -Infinity;
         let maxY = -Infinity;
 
-        data.areas.forEach(rawPolygon => {
+        config.areas.forEach(rawPolygon => {
             rawPolygon.map(([x, y]) => {
                 minX = Math.min(x, minX);
                 minY = Math.min(y, minY);
@@ -122,7 +133,7 @@ export class GameScene {
             shiftY = centerY - areaCenterY;
         }
 
-        this.areas = data.areas.map((rawPolygon, index) => {
+        this.areas = config.areas.map((rawPolygon, index) => {
             // TODO: calculate center
 
             let polygon = rawPolygon.map(([x, y]) => [
@@ -136,7 +147,16 @@ export class GameScene {
         });
     }
 
-    handleStateMessage(state) {
+    addAreaHook(hookName, hook) {
+        this.areas.forEach((area, index) => {
+            if (!area.graphics.interactive) {
+                area.graphics.interactive = true;
+            }
+            // area.graphics.on(hookName, hook(area, index))
+        });
+    }
+
+    handleState(state) {
         this.graphicsAreas.clear();
 
         state.areas.forEach((areaData, index) => {
@@ -145,5 +165,3 @@ export class GameScene {
         });
     }
 }
-
-

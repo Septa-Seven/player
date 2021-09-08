@@ -1,23 +1,22 @@
 import {Session} from "./Session";
 import {GameScene} from "./GameScene";
 import {API} from 'nouislider';
+import * as noUiSlider from 'nouislider';
 
-export class Player {
-    session: Session;
-    gameScene: GameScene;
-    currentTurn: number;
-    timer: NodeJS.Timeout;
-    slider: API;
+class Player {
+    private session: Session;
+    private gameScene: GameScene;
+    private currentTurn: number;
+    private timer: NodeJS.Timeout;
+    private slider: API;
 
     constructor(session, slider, gameScene) {
         this.session = session;
 
-        gameScene.handleStartMessage(session.areas)
-        this.gameScene = gameScene;
-
         slider.on('update', (turn) => {
             this.rewind(Math.floor(turn));
         })
+        
         slider.on('end', () => {
             this.stop()
         })
@@ -36,7 +35,6 @@ export class Player {
     }
 
     stop() {
-        console.log('stop');
         clearInterval(this.timer);
         this.timer = null;
     }
@@ -47,7 +45,8 @@ export class Player {
     }
 
     drawTurn(currentTurn: number) {
-        this.gameScene.handleStateMessage(this.session.turns[this.currentTurn].state);
+        console.log(this.gameScene.handleState)
+        this.gameScene.handleState(this.session.turns[this.currentTurn].state);
     }
 
     nextTurn() {
@@ -59,4 +58,23 @@ export class Player {
         this.currentTurn++;
         this.slider.set(this.currentTurn)
     }
+}
+
+export function createPlayer(session: Session, gameSceneContainer: HTMLElement, sliderContainer:HTMLElement): Player {
+    const gameScene = new GameScene(
+        session.config,
+        gameSceneContainer
+    );
+
+    const slider = noUiSlider.create(sliderContainer, {
+        start: [0],
+        step: 1,
+        range: {
+            'min': [0],
+            'max': [session.turns.length - 1],
+        }
+    });
+
+    const player = new Player(session, slider, gameScene);
+    return player;
 }
