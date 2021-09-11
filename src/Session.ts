@@ -1,9 +1,9 @@
-import {AreaModel} from './shared/models/AreaModel'
+import {Config} from './shared/models/AreaModel'
 import {WinnersModel} from './shared/models/WinnersModel'
 import {TurnModel} from './shared/models/TurnModel'
 
 export class Session {
-    config: AreaModel;
+    config: Config;
     turns: TurnModel[];
     winners: WinnersModel;
 
@@ -22,7 +22,6 @@ export class Session {
             turns.push(turn);
         }
         this.turns = turns;
-        console.log(this.config, this.turns, this.winners)
 
     }
 }
