@@ -1,7 +1,7 @@
 
 import {API} from 'nouislider';
 import * as noUiSlider from 'nouislider';
-
+import {AbstractPlayerContext} from './PlayerContext';
 
 export class Player {
     private context: AbstractPlayerContext;
@@ -31,8 +31,8 @@ export class Player {
 
 
         this.slider = slider;
-
         this.currentTurn = 0;
+        this.drawTurn(this.currentTurn);
     }
 
     play() {
@@ -53,7 +53,6 @@ export class Player {
     }
 
     drawTurn(currentTurn: number) {
-        console.log(this.context, 'asdfasdfsa')
         this.context.gameScene.handleState(this.context.session.turns[this.currentTurn].state);
     }
 

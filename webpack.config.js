@@ -2,6 +2,8 @@ const path = require('path');
 const HTMLWebpackPlugin = require('html-webpack-plugin');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const TerserWebpackPlugin = require('terser-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const ImageminPlugin = require('imagemin-webpack-plugin').default;
 
 const isDev = process.env.NODE_ENV === 'development';
 const isProd = process.env.NODE_ENV === 'production';
@@ -34,8 +36,11 @@ module.exports = {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist'),
     },
-
     devServer: {
+        static: {
+            directory: path.join(__dirname, 'src', 'assets'),
+            publicPath: '/'
+        },
         port: 4200,
         hot: isDev,
     },
@@ -49,7 +54,7 @@ module.exports = {
                 collapseWhiteSpace: isProd,
             }
         }),
-        new CleanWebpackPlugin(),
+        new CleanWebpackPlugin()
     ],
 
     module: {

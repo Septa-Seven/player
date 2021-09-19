@@ -1,25 +1,21 @@
 import * as PIXI from 'pixi.js';
 import polylabel from 'polylabel';
-import { Config } from './shared/Config';
+import { Config } from './shared/models/Config';
+import {Textures} from './load';
 
 const PLAYERS_COLORS = [
-    0xe61717,
-    0xf29913,
-    0xf2d813,
-    0x32d937,
-    0x32d9c2,
-    0xb344fc,
-    0xfa82ee,
-    0x4537c4,
-];
-
-const PLAYERS_DICE_SPRITES = [
-    
+    0xad1514,
+    0x0073ac,
+    0x009882,
+    0x009900,
+    0xbc9000,
+    0xab0196,
+    0x000092,
+    0xc94c00,
 ];
 
 const NEUTRAL_COLOR = 0x555555;
 
-const SELECTED_COLOR = 0x232526;
 const OUTLINE_COLOR = 0x000;
 
 
@@ -37,30 +33,32 @@ export class Area {
 
         [this.centerX, this.centerY] = polylabel([polygon], 100);
         this.polygon = new PIXI.Polygon(polygon.flat());
+
+        // TODO: Calculate sprite width and height.
     }
 
-    update(owner: number, dices: number, color: number, width: number, height: number, texture: PIXI.Texture) {
+    update(owner: number, dices: number, color: number, scale: number, texture: PIXI.Texture) {
         this.owner = owner;
         this.dices = dices;
-        this.draw(color, width, height, texture);
+        this.draw(color, scale, texture);
     }
 
-    draw(color: number, width: number, height: number, texture: PIXI.Texture) {
+    draw(color: number, scale: number, texture: PIXI.Texture) {
         this.graphics.clear();
         this.graphics.removeChildren();
-        
+        console.log(texture);
         // Dices
         if(this.dices < 5) {
-            this.drawTower(this.centerX, this.centerY, width, height, texture, this.dices);
+            this.drawTower(this.centerX, this.centerY, scale, texture, this.dices);
         } else {
-            const offsetX = width / 2;
-            const offsetY = height / 2;
+            const offsetX = texture.width * scale / 2;
+            const offsetY = texture.height * scale / 2;
+            
+            // Left
+            this.drawTower(this.centerX - offsetX, this.centerY - offsetY, scale, texture, this.dices - 4);
             // Right tower
-            this.drawTower(this.centerX + offsetX, this.centerY + offsetY, width, height, texture, 4);
-            // Left 
-            this.drawTower(this.centerX - offsetX, this.centerY - offsetY, width, height, texture, this.dices - 4);
+            this.drawTower(this.centerX + offsetX, this.centerY + offsetY, scale, texture, 4);
         }
-        this.graphics.addChild(diceText);
         
         // Outline
         this.graphics.lineStyle(2, OUTLINE_COLOR, 1);
@@ -69,19 +67,22 @@ export class Area {
         this.graphics.endFill();
     }
 
-    private drawTower(x: number, y: number, width: number, height: number, texture, count: number) {
+    private drawTower(x: number, y: number, scale: number, texture: PIXI.Texture, count: number) {
+        const step = texture.height / 2;
         for(let i = 0; i < count; i++) {
-            this.drawDice(x, y, texture);
-            y += height;
+            this.drawDice(x, y, scale, texture);
+            y -= step;
         }
     }
 
-    private drawDice(x, y, width: number, height: number, texture) {
+    private drawDice(x: number, y: number, scale: number, texture: PIXI.Texture) {
         const sprite = new PIXI.Sprite(texture);
+        sprite.anchor.set(0.5);
         sprite.x = x;
         sprite.y = y;
-        sprite.width = width;
-        sprite.height = height;
+        sprite.width *= scale;
+        sprite.height *= scale;
+        this.graphics.addChild(sprite);
     }
 }
 
@@ -89,11 +90,10 @@ export class GameScene {
     private areas: Area[];
     private app: PIXI.Application;
     private graphicsAreas: PIXI.Graphics;
-    private loader: PIXI.Loader;
-    private diceSpriteWidth: number;
-    private diceSpriteHeight: number;
+    private textures;
+    private diceSpriteScale: number;
 
-    constructor(config: Config, container: HTMLElement, loader: PIXI.Loader) {
+    constructor(config: Config, container: HTMLElement, textures: Textures) {
         this.graphicsAreas = new PIXI.Graphics();
         let app = new PIXI.Application({
             width: container.clientWidth,
@@ -102,7 +102,7 @@ export class GameScene {
             antialias: true,
         });
         
-        this.loader = loader;
+        this.textures = textures;
 
         container.appendChild(app.view);
         
@@ -130,8 +130,8 @@ export class GameScene {
         });
 
         // This much space left on scene borders to draw UI
-        const paddingWidth = this.app.screen.width/4;
-        const paddingHeight = this.app.screen.height/4;
+        const paddingWidth = this.app.screen.width/6;
+        const paddingHeight = this.app.screen.height/6;
 
         const maxAxis = Math.max(maxX - minX, maxY - minY);
 
@@ -151,13 +151,9 @@ export class GameScene {
             shiftY = centerY - areaCenterY;
         }
 
-        // TODO: Calculate sprite width and height.
-        this.diceSpriteWidth = 0.5 * coeffWidth;
-        this.diceSpriteHeight = 0.5 * coeffHeight;
+        this.diceSpriteScale = 0.9 * Math.min(coeffWidth, coeffHeight);
 
         this.areas = config.areas.map((rawPolygon, index) => {
-            // TODO: calculate center
-
             let polygon = rawPolygon.map(([x, y]) => [
                 x * coeffWidth + shiftX,
                 y * coeffHeight + shiftY,
@@ -183,14 +179,22 @@ export class GameScene {
 
         state.areas.forEach((areaData, index) => {
             let area = this.areas[index];
-            const color = owner === null ? NEUTRAL_COLOR : PLAYERS_COLORS[owner];
+            let color, textureName;
+            if (areaData.owner === null) {
+                color = NEUTRAL_COLOR;
+                textureName = 'dice8';
+            } else {
+                color = PLAYERS_COLORS[areaData.owner];
+                textureName = 'dice' + areaData.owner;
+            }
+
+            console.log(textureName, this.textures, this.diceSpriteScale, Object.keys(this.textures));
             area.update(
                 areaData.owner,
                 areaData.dices,
                 color,
-                this.diceSpriteWidth,
-                this.diceSpriteHeight,
-                this.loader.resources['cubik'].texture
+                this.diceSpriteScale,
+                this.textures[textureName]
             );
         });
     }
