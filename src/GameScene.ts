@@ -46,7 +46,6 @@ export class Area {
     draw(color: number, scale: number, texture: PIXI.Texture) {
         this.graphics.clear();
         this.graphics.removeChildren();
-        console.log(texture);
         // Dices
         if(this.dices < 5) {
             this.drawTower(this.centerX, this.centerY, scale, texture, this.dices);
@@ -179,7 +178,7 @@ export class GameScene {
 
         state.areas.forEach((areaData, index) => {
             let area = this.areas[index];
-            let color, textureName;
+            let color: number, textureName: string;
             if (areaData.owner === null) {
                 color = NEUTRAL_COLOR;
                 textureName = 'dice8';
@@ -188,7 +187,7 @@ export class GameScene {
                 textureName = 'dice' + areaData.owner;
             }
 
-            console.log(textureName, this.textures, this.diceSpriteScale, Object.keys(this.textures));
+
             area.update(
                 areaData.owner,
                 areaData.dices,
