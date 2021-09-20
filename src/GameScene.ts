@@ -20,33 +20,35 @@ const OUTLINE_COLOR = 0x000;
 
 
 export class Area {
+    index: number;
     owner: number;
     dices: number;
 
-    graphics: PIXI.Graphics;
+    dicesGraphics: PIXI.Graphics;
+    backgroundGraphics: PIXI.Graphics;
     polygon: PIXI.Polygon;
     centerX: number;
     centerY: number;
 
-    constructor(polygon) {
-        this.graphics = new PIXI.Graphics();
+    constructor(index, polygon) {
+        this.dicesGraphics = new PIXI.Graphics();
+        this.backgroundGraphics = new PIXI.Graphics();
 
         [this.centerX, this.centerY] = polylabel([polygon], 100);
         this.polygon = new PIXI.Polygon(polygon.flat());
-
+        
+        this.index = index;
         // TODO: Calculate sprite width and height.
     }
 
-    update(owner: number, dices: number, color: number, scale: number, texture: PIXI.Texture) {
+    update(owner: number, dices: number) {
         this.owner = owner;
         this.dices = dices;
-        this.draw(color, scale, texture);
     }
 
-    draw(color: number, scale: number, texture: PIXI.Texture) {
-        this.graphics.clear();
-        this.graphics.removeChildren();
+    drawDices(scale: number, texture: PIXI.Texture) {
         // Dices
+        this.dicesGraphics.removeChildren();
         if(this.dices < 5) {
             this.drawTower(this.centerX, this.centerY, scale, texture, this.dices);
         } else {
@@ -58,12 +60,15 @@ export class Area {
             // Right tower
             this.drawTower(this.centerX + offsetX, this.centerY + offsetY, scale, texture, 4);
         }
-        
+    }
+
+    drawBackground(color) {
+        this.backgroundGraphics.clear();
         // Outline
-        this.graphics.lineStyle(2, OUTLINE_COLOR, 1);
-        this.graphics.beginFill(color);
-        this.graphics.drawPolygon(this.polygon);
-        this.graphics.endFill();
+        this.backgroundGraphics.lineStyle(2, OUTLINE_COLOR, 1);
+        this.backgroundGraphics.beginFill(color);
+        this.backgroundGraphics.drawPolygon(this.polygon);
+        this.backgroundGraphics.endFill();
     }
 
     private drawTower(x: number, y: number, scale: number, texture: PIXI.Texture, count: number) {
@@ -83,12 +88,13 @@ export class Area {
         const maxSide = Math.max(sprite.width, sprite.height)
         sprite.width = 2 * sprite.width/maxSide * scale;
         sprite.height = 2 * sprite.height/maxSide * scale;
-        this.graphics.addChild(sprite);
+        this.dicesGraphics.addChild(sprite);
     }
 }
 
 export class GameScene {
     private areas: Area[];
+    private drawOrder: number[];
     private app: PIXI.Application;
     private graphicsAreas: PIXI.Graphics;
     private textures;
@@ -160,9 +166,24 @@ export class GameScene {
                 y * coeffHeight + shiftY,
             ]);
 
-            let area = new Area(polygon);
-            this.graphicsAreas.addChild(area.graphics);
+            let area = new Area(index, polygon);
+            this.graphicsAreas.addChild(area.backgroundGraphics);
             return area;
+        });
+        
+        this.drawOrder = [...Array(this.areas.length).keys()]
+        this.drawOrder.sort((areaIndex1, areaIndex2) => {
+            const a1 = this.areas[areaIndex1];
+            const a2 = this.areas[areaIndex2];
+            const diff = a1.centerY - a2.centerY;
+            if (diff == 0) {
+                return a1.centerX - a2.centerX;
+            }
+            return diff;
+        });
+        this.drawOrder.forEach(areaIndex => {
+            const area = this.areas[areaIndex];
+            this.graphicsAreas.addChild(area.dicesGraphics);
         });
     }
 
@@ -180,23 +201,30 @@ export class GameScene {
 
         state.areas.forEach((areaData, index) => {
             let area = this.areas[index];
-            let color: number, textureName: string;
+            let color: number;
             if (areaData.owner === null) {
                 color = NEUTRAL_COLOR;
-                textureName = 'dice8';
             } else {
                 color = PLAYERS_COLORS[areaData.owner];
-                textureName = 'dice' + areaData.owner;
             }
-
 
             area.update(
                 areaData.owner,
                 areaData.dices,
-                color,
-                this.diceSpriteScale,
-                this.textures[textureName]
             );
+            
+            area.drawBackground(color);
+        });
+
+        this.drawOrder.forEach(areaIndex => {
+            const area = this.areas[areaIndex];
+            let textureName: string;
+            if (area.owner === null) {
+                textureName = 'dice8';
+            } else {
+                textureName = 'dice' + area.owner;
+            }
+            area.drawDices(this.diceSpriteScale, this.textures[textureName]);
         });
     }
 }
