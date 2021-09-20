@@ -50,8 +50,8 @@ export class Area {
         if(this.dices < 5) {
             this.drawTower(this.centerX, this.centerY, scale, texture, this.dices);
         } else {
-            const offsetX = texture.width * scale / 2;
-            const offsetY = texture.height * scale / 2;
+            const offsetX = scale / 2;
+            const offsetY = scale / 4;
             
             // Left
             this.drawTower(this.centerX - offsetX, this.centerY - offsetY, scale, texture, this.dices - 4);
@@ -67,7 +67,7 @@ export class Area {
     }
 
     private drawTower(x: number, y: number, scale: number, texture: PIXI.Texture, count: number) {
-        const step = texture.height / 2;
+        const step = 1 * scale;
         for(let i = 0; i < count; i++) {
             this.drawDice(x, y, scale, texture);
             y -= step;
@@ -79,8 +79,10 @@ export class Area {
         sprite.anchor.set(0.5);
         sprite.x = x;
         sprite.y = y;
-        sprite.width *= scale;
-        sprite.height *= scale;
+
+        const maxSide = Math.max(sprite.width, sprite.height)
+        sprite.width = 2 * sprite.width/maxSide * scale;
+        sprite.height = 2 * sprite.height/maxSide * scale;
         this.graphics.addChild(sprite);
     }
 }
@@ -150,8 +152,8 @@ export class GameScene {
             shiftY = centerY - areaCenterY;
         }
 
-        this.diceSpriteScale = 0.9 * Math.min(coeffWidth, coeffHeight);
-
+        this.diceSpriteScale = Math.min(coeffWidth, coeffHeight);
+        
         this.areas = config.areas.map((rawPolygon, index) => {
             let polygon = rawPolygon.map(([x, y]) => [
                 x * coeffWidth + shiftX,

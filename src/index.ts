@@ -21,7 +21,6 @@ const initGame = (textures: Textures): void => {
     startButton.addEventListener('click', player.play.bind(player))
 }
 
-// TODO: Strongly type dice enum
 const textures = loadInitialResources([
     {name: DiceNames.dice0, url: 'images/0.png'},
     {name: DiceNames.dice1, url: 'images/1.png'},
