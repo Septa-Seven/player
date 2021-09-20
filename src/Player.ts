@@ -2,12 +2,20 @@
 import {API} from 'nouislider';
 import * as noUiSlider from 'nouislider';
 import {AbstractPlayerContext} from './PlayerContext';
+import { IPlayerControl, StopButtonStates } from './PlayerControl';
 
-export class Player {
+export interface IPlayer {
+    play: () => void;
+    stop: () => void;
+    restart: () => void;
+}
+
+export class Player implements IPlayer{
     private context: AbstractPlayerContext;
     private currentTurn: number;
     private timer: NodeJS.Timeout;
     private slider: API;
+    private playerControl: IPlayerControl;
 
     constructor(context: AbstractPlayerContext, sliderContainer: HTMLElement) {
         const slider = noUiSlider.create(sliderContainer, {
@@ -35,6 +43,10 @@ export class Player {
         this.drawTurn(this.currentTurn);
     }
 
+    setControl(playerControl: IPlayerControl) {
+        this.playerControl = playerControl;
+    }
+
     play() {
         if(!this.timer) {
             const timer = setInterval(() => this.nextTurn(), 200);
@@ -42,23 +54,29 @@ export class Player {
         }
     }
 
+    restart() {
+        this.rewind(0);
+        this.playerControl.setStateStopButton(StopButtonStates.stop);
+    }
+
     stop() {
         clearInterval(this.timer);
         this.timer = null;
     }
 
-    rewind(logCount) {
+    private rewind(logCount) {
         this.currentTurn = logCount;
         this.drawTurn(this.currentTurn);
     }
 
-    drawTurn(currentTurn: number) {
+    private drawTurn(currentTurn: number) {
         this.context.gameScene.handleState(this.context.session.turns[this.currentTurn].state);
     }
 
-    nextTurn() {
-        if(this.currentTurn > this.context.session.turns.length - 1) {
+    private nextTurn() {
+        if(this.currentTurn > this.context.session.turns.length - 2) {
             this.stop();
+            this.playerControl.setStateStopButton(StopButtonStates.restart);
             return;
         }
         this.drawTurn(this.currentTurn);

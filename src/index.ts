@@ -5,20 +5,19 @@ import 'nouislider/dist/nouislider.css';
 import {mockData} from './shared/models/mock';
 import {Session} from "./Session";
 import { DiceNames, loadInitialResources, Textures } from "./load";
-const stopButton = document.getElementById('stop');
-const startButton = document.getElementById('start');
+import { PlayerControl } from "./PlayerControl";
+import { PlaneGeometry } from "@pixi/mesh-extras";
 
 const sliderContainer = document.getElementById('slider');
 const gameSceneContainer = document.getElementById('vizualizer');
+
 const session = new Session(mockData);
 
 const initGame = (textures: Textures): void => {
     const playerContext = new PlayerContext(session, gameSceneContainer, textures)
-
     const player = new Player(playerContext, sliderContainer);
-    
-    stopButton.addEventListener('click', player.stop.bind(player))
-    startButton.addEventListener('click', player.play.bind(player))
+    const playerControl = new PlayerControl(player, 'start', 'stop')
+    player.setControl(playerControl);
 }
 
 const textures = loadInitialResources([
