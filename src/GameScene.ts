@@ -2,6 +2,8 @@ import * as PIXI from 'pixi.js';
 import polylabel from 'polylabel';
 import { Config } from './shared/models/Config';
 import {Textures} from './load';
+import { OutlineFilter } from '@pixi/filter-outline';
+
 
 const PLAYERS_COLORS = [
     0xad1514,
@@ -32,6 +34,9 @@ export class Area {
 
     constructor(index, polygon) {
         this.dicesGraphics = new PIXI.Graphics();
+        this.dicesGraphics.filters = [
+            new OutlineFilter(2, 0x000000),
+        ];
         this.backgroundGraphics = new PIXI.Graphics();
 
         [this.centerX, this.centerY] = polylabel([polygon], 100);
@@ -187,12 +192,13 @@ export class GameScene {
         });
     }
 
-    addAreaHook(hookName, hook) {
-        this.areas.forEach((area, index) => {
-            if (!area.graphics.interactive) {
-                area.graphics.interactive = true;
+    setAreaClickHook(hook) {
+        this.areas.forEach(area => {
+            if (!area.backgroundGraphics.interactive) {
+                area.backgroundGraphics.interactive = true;
             }
-            // area.graphics.on(hookName, hook(area, index))
+
+            area.backgroundGraphics.on('pointerdown', hook(area));
         });
     }
 
