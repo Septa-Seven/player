@@ -18,8 +18,13 @@ const PLAYERS_COLORS = [
 
 const NEUTRAL_COLOR = 0x555555;
 
-const OUTLINE_COLOR = 0x000;
+const AREA_OUTLINE_COLOR = 0x000;
 
+const DICE_OUTLINE_COLOR = 0x000;
+
+const BACKGROUND_COLOR = 0x7e8991;
+
+const SHADOW_COLOR = 0x000;
 
 export class Area {
     index: number;
@@ -28,6 +33,7 @@ export class Area {
 
     dicesGraphics: PIXI.Graphics;
     backgroundGraphics: PIXI.Graphics;
+    shadow: PIXI.Graphics;
     polygon: PIXI.Polygon;
     centerX: number;
     centerY: number;
@@ -35,15 +41,20 @@ export class Area {
     constructor(index, polygon) {
         this.dicesGraphics = new PIXI.Graphics();
         this.dicesGraphics.filters = [
-            new OutlineFilter(2, 0x000000),
+            new OutlineFilter(2, DICE_OUTLINE_COLOR),
         ];
         this.backgroundGraphics = new PIXI.Graphics();
 
         [this.centerX, this.centerY] = polylabel([polygon], 100);
         this.polygon = new PIXI.Polygon(polygon.flat());
         
+        this.shadow = new PIXI.Graphics();
+        this.shadow.beginFill(SHADOW_COLOR);
+        this.shadow.drawCircle(this.centerX + 5, this.centerY + 10, 10);
+        this.shadow.endFill();
+        this.shadow.filters = [new PIXI.filters.BlurFilter()];
+
         this.index = index;
-        // TODO: Calculate sprite width and height.
     }
 
     update(owner: number, dices: number) {
@@ -70,7 +81,7 @@ export class Area {
     drawBackground(color) {
         this.backgroundGraphics.clear();
         // Outline
-        this.backgroundGraphics.lineStyle(2, OUTLINE_COLOR, 1);
+        this.backgroundGraphics.lineStyle(2, AREA_OUTLINE_COLOR, 1);
         this.backgroundGraphics.beginFill(color);
         this.backgroundGraphics.drawPolygon(this.polygon);
         this.backgroundGraphics.endFill();
@@ -110,7 +121,7 @@ export class GameScene {
         let app = new PIXI.Application({
             width: container.clientWidth,
             height: container.clientHeight,
-            backgroundColor: 0x7e8991,
+            backgroundColor: BACKGROUND_COLOR,
             antialias: true,
         });
         
@@ -145,36 +156,48 @@ export class GameScene {
         const paddingWidth = this.app.screen.width/6;
         const paddingHeight = this.app.screen.height/6;
 
-        const maxAxis = Math.max(maxX - minX, maxY - minY);
-
-        const coeffWidth = (this.app.screen.width - paddingWidth)/maxAxis;
-        const coeffHeight = (this.app.screen.height - paddingHeight)/maxAxis;
+        const coeffWidth = (this.app.screen.width - paddingWidth)/(maxX - minX);
+        const coeffHeight = (this.app.screen.height - paddingHeight)/(maxY - minY);
+        const minCoeff = Math.min(coeffWidth, coeffHeight);
 
         let shiftX: number;
         let shiftY: number;
         {
-            const areaCenterX = coeffWidth * (maxX + minX) / 2;
-            const areaCenterY = coeffHeight * (maxY + minY) / 2;
+            const areaCenterX = (maxX + minX) / 2;
+            const areaCenterY = (maxY + minY) / 2;
 
-            const centerX = this.app.screen.width / 2;
-            const centerY = this.app.screen.height / 2;
+            const screenCenterX = this.app.screen.width / 2;
+            const screenCenterY = this.app.screen.height / 2;
 
-            shiftX = centerX - areaCenterX;
-            shiftY = centerY - areaCenterY;
+            shiftX = screenCenterX - minCoeff * areaCenterX;
+            shiftY = screenCenterY - minCoeff * areaCenterY;
         }
 
-        this.diceSpriteScale = Math.min(coeffWidth, coeffHeight);
+        let diceSpriteScale = Infinity;
         
         this.areas = config.areas.map((rawPolygon, index) => {
             let polygon = rawPolygon.map(([x, y]) => [
-                x * coeffWidth + shiftX,
-                y * coeffHeight + shiftY,
+                x * minCoeff + shiftX,
+                y * minCoeff + shiftY,
             ]);
 
             let area = new Area(index, polygon);
+
+            polygon.forEach(([x, y]) => {
+                const distance = Math.sqrt(
+                    Math.pow(x - area.centerX, 2) + Math.pow(y - area.centerY, 2));
+                
+                if (diceSpriteScale > distance) {
+                    diceSpriteScale = distance;
+                }
+            });
+
+            // Register area graphics
             this.graphicsAreas.addChild(area.backgroundGraphics);
+            this.graphicsAreas.addChild(area.shadow);
             return area;
         });
+        this.diceSpriteScale = diceSpriteScale / 2;
         
         this.drawOrder = [...Array(this.areas.length).keys()]
         this.drawOrder.sort((areaIndex1, areaIndex2) => {
@@ -192,7 +215,7 @@ export class GameScene {
         });
     }
 
-    setAreaClickHook(hook) {
+    addAreaClickHook(hook) {
         this.areas.forEach(area => {
             if (!area.backgroundGraphics.interactive) {
                 area.backgroundGraphics.interactive = true;
@@ -202,7 +225,7 @@ export class GameScene {
         });
     }
 
-    handleState(state) {
+    setState(state) {
         this.graphicsAreas.clear();
 
         state.areas.forEach((areaData, index) => {

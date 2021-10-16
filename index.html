@@ -2,20 +2,33 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <style>
-
-    </style>
   </head>
   <body>
   <div class="container">
-    <div id="vizualizer"></div>
+    <div id="visualizer"></div>
+    <div id="info">
+      <div class="record died">
+        <div class="playerName">Boba</div>
+        <div class="status">Disconnected</div>
+        <div class="savings">5</div>
+      </div>
+    </div>
     <div class="control">
       <button id="start" class="button">start</button>
       <button id="stop" class="button">stop</button>
       <div class="sliderContainer">
-        <div id="slider"></div>
+        <input type="range" id="slider" min="0" max="100" value="0" step="0.1" class="styled-slider slider-progress"/>
       </div>
     </div>
   </div>
+
+  <script>
+    for (let e of document.querySelectorAll('input[type="range"].slider-progress')) {
+  e.style.setProperty('--value', e.value);
+  e.style.setProperty('--min', e.min == '' ? '0' : e.min);
+  e.style.setProperty('--max', e.max == '' ? '100' : e.max);
+  e.addEventListener('input', () => e.style.setProperty('--value', e.value));
+}
+  </script>
   </body>
 </html>

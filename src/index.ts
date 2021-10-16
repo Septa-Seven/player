@@ -1,12 +1,13 @@
 import {Player} from "./Player";
 import {PlayerContext} from './PlayerContext'
 import './assets/styles/index.css';
+import './assets/styles/slider.css';
+
 import 'nouislider/dist/nouislider.css';
 import {mockData} from './shared/models/mock';
 import {Session} from "./Session";
 import { DiceNames, loadInitialResources, Textures } from "./load";
 import { PlayerControl } from "./PlayerControl";
-import { PlaneGeometry } from "@pixi/mesh-extras";
 
 const sliderContainer = document.getElementById('slider');
 const gameSceneContainer = document.getElementById('vizualizer');
@@ -31,5 +32,3 @@ const textures = loadInitialResources([
     {name: DiceNames.dice7, url: 'images/7.png'},
     {name: DiceNames.dice8, url: 'images/8.png'},
 ], initGame);
-
-

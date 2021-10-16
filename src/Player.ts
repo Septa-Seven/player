@@ -70,7 +70,7 @@ export class Player implements IPlayer{
     }
 
     private drawTurn(currentTurn: number) {
-        this.context.gameScene.handleState(this.context.session.turns[this.currentTurn].state);
+        this.context.gameScene.setState(this.context.session.turns[this.currentTurn].state);
     }
 
     private nextTurn() {
