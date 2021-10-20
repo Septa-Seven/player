@@ -1,6 +1,3 @@
-
-import {API} from 'nouislider';
-import * as noUiSlider from 'nouislider';
 import {AbstractPlayerContext} from './PlayerContext';
 import { IPlayerControl, StopButtonStates } from './PlayerControl';
 
@@ -8,16 +5,23 @@ export interface IPlayer {
     play: () => void;
     stop: () => void;
     restart: () => void;
+    setControl: (playerControl: IPlayerControl) => void;
 }
 
 export class Player implements IPlayer{
     private context: AbstractPlayerContext;
     private currentTurn: number;
     private timer: NodeJS.Timeout;
-    private slider: API;
     private playerControl: IPlayerControl;
+    private callbacks: Record<string, (() => any)[]>;
 
     constructor(context: AbstractPlayerContext, sliderContainer: HTMLElement) {
+        this.callbacks = {
+            'play': [],
+            'stop': [],
+            'restart': [],
+        }
+
         const slider = noUiSlider.create(sliderContainer, {
             start: [0],
             step: 1,
@@ -27,8 +31,6 @@ export class Player implements IPlayer{
             }
         });
 
-        this.context = context;
-
         slider.on('update', (turn) => {
             this.rewind(Math.floor(turn));
         })
@@ -37,14 +39,14 @@ export class Player implements IPlayer{
             this.stop()
         })
 
+        this.context = context;
 
-        this.slider = slider;
         this.currentTurn = 0;
         this.drawTurn(this.currentTurn);
     }
 
-    setControl(playerControl: IPlayerControl) {
-        this.playerControl = playerControl;
+    subscribe(method: string, callback: () => any) {
+        this.callbacks[method].push(callback);
     }
 
     play() {
@@ -52,20 +54,24 @@ export class Player implements IPlayer{
             const timer = setInterval(() => this.nextTurn(), 200);
             this.timer = timer;
         }
+        
+        this.callbacks['start'].forEach((callback) => callback());
     }
 
     restart() {
         this.rewind(0);
         this.playerControl.setStateStopButton(StopButtonStates.stop);
+        this.callbacks['restart'].forEach((callback) => callback());
     }
 
     stop() {
         clearInterval(this.timer);
         this.timer = null;
+        this.callbacks['stop'].forEach((callback) => callback());
     }
 
-    private rewind(logCount) {
-        this.currentTurn = logCount;
+    rewind(currentTurn: number) {
+        this.currentTurn = currentTurn;
         this.drawTurn(this.currentTurn);
     }
 
