@@ -1,4 +1,6 @@
 import * as PIXI from 'pixi.js';
+import { initGame } from './init';
+import { Session } from './Session';
 
 export enum DiceNames {
     dice0 = 'dice0',
@@ -29,9 +31,14 @@ export interface Textures {
     dice8: PIXI.Texture;
 }
 
-type gameInit = (textures: Textures) => void;
+type gameInit = () => void;
 
-export const loadInitialResources = (path: ResourcePath | ResourcePath[], initGame: gameInit): PIXI.Loader => {
+
+export const loadInitialResources = (
+    path: ResourcePath | ResourcePath[],
+    container: HTMLElement,
+    session: Session,
+): PIXI.Loader => {
     const loader = PIXI.Loader.shared;
 
     if(Array.isArray(path)) {
@@ -44,7 +51,7 @@ export const loadInitialResources = (path: ResourcePath | ResourcePath[], initGa
         for(const key in resources) {
             textures[key] = resources[key].texture;
         }
-        initGame(textures);
+        initGame(container, textures, session);
     });
 
     return loader;

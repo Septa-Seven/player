@@ -1,57 +1,40 @@
 import {AbstractPlayerContext} from './PlayerContext';
-import { IPlayerControl, StopButtonStates } from './PlayerControl';
 
 export interface IPlayer {
-    play: () => void;
+    start: () => void;
     stop: () => void;
     restart: () => void;
-    setControl: (playerControl: IPlayerControl) => void;
+    subscribe: (method: string, callback: () => any) => void;
 }
 
-export class Player implements IPlayer{
+export class Player implements IPlayer {
     private context: AbstractPlayerContext;
     private currentTurn: number;
     private timer: NodeJS.Timeout;
-    private playerControl: IPlayerControl;
-    private callbacks: Record<string, (() => any)[]>;
+    private callbacks: Record<string, ((turn: any) => any)[]>;
 
     constructor(context: AbstractPlayerContext, sliderContainer: HTMLElement) {
+        // TODO: typed callbacks for each method
         this.callbacks = {
-            'play': [],
+            'start': [],
             'stop': [],
             'restart': [],
+            'rewind': [],
         }
-
-        const slider = noUiSlider.create(sliderContainer, {
-            start: [0],
-            step: 1,
-            range: {
-                'min': [0],
-                'max': [context.session.turns.length - 1],
-            }
-        });
-
-        slider.on('update', (turn) => {
-            this.rewind(Math.floor(turn));
-        })
-        
-        slider.on('end', () => {
-            this.stop()
-        })
 
         this.context = context;
 
         this.currentTurn = 0;
         this.drawTurn(this.currentTurn);
     }
-
-    subscribe(method: string, callback: () => any) {
+    
+    subscribe(method: string, callback: (turn: any) => any) {
         this.callbacks[method].push(callback);
     }
 
-    play() {
-        if(!this.timer) {
-            const timer = setInterval(() => this.nextTurn(), 200);
+    start() {
+        if (!this.timer) {
+            const timer = setInterval(() => this.rewind(), 200);
             this.timer = timer;
         }
         
@@ -59,8 +42,7 @@ export class Player implements IPlayer{
     }
 
     restart() {
-        this.rewind(0);
-        this.playerControl.setStateStopButton(StopButtonStates.stop);
+        this.toTurn(0);
         this.callbacks['restart'].forEach((callback) => callback());
     }
 
@@ -70,7 +52,7 @@ export class Player implements IPlayer{
         this.callbacks['stop'].forEach((callback) => callback());
     }
 
-    rewind(currentTurn: number) {
+    toTurn(currentTurn: number) {
         this.currentTurn = currentTurn;
         this.drawTurn(this.currentTurn);
     }
@@ -79,15 +61,14 @@ export class Player implements IPlayer{
         this.context.gameScene.setState(this.context.session.turns[this.currentTurn].state);
     }
 
-    private nextTurn() {
+    private rewind() {
         if(this.currentTurn > this.context.session.turns.length - 2) {
             this.stop();
-            this.playerControl.setStateStopButton(StopButtonStates.restart);
             return;
         }
         this.drawTurn(this.currentTurn);
         this.currentTurn++;
-        this.slider.set(this.currentTurn)
+
+        this.callbacks['rewind'].forEach((callback) => callback(this.currentTurn));
     }
 }
-
