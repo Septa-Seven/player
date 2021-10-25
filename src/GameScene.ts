@@ -50,7 +50,7 @@ export class Area {
         
         this.shadow = new PIXI.Graphics();
         this.shadow.beginFill(SHADOW_COLOR);
-        this.shadow.drawCircle(this.centerX + 5, this.centerY + 10, 10);
+        this.shadow.drawEllipse(this.centerX + 5, this.centerY + 5, 5, 5);
         this.shadow.endFill();
         this.shadow.filters = [new PIXI.filters.BlurFilter()];
 

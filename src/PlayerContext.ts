@@ -1,11 +1,10 @@
-import {Session} from "./Session";
 import * as PIXI from 'pixi.js';
+import {Session} from "./Session";
 import {GameScene} from './GameScene';
 
 export abstract class AbstractPlayerContext {
     session: Session
     gameScene: GameScene
-    slider: any
     
     constructor(session: Session, gameSceneContainer: HTMLElement, textures) {
         const gameScene = new GameScene(

@@ -13,7 +13,7 @@ export class Player implements IPlayer {
     private timer: NodeJS.Timeout;
     private callbacks: Record<string, ((turn: any) => any)[]>;
 
-    constructor(context: AbstractPlayerContext, sliderContainer: HTMLElement) {
+    constructor(context: AbstractPlayerContext) {
         // TODO: typed callbacks for each method
         this.callbacks = {
             'start': [],
@@ -62,7 +62,7 @@ export class Player implements IPlayer {
     }
 
     private rewind() {
-        if(this.currentTurn > this.context.session.turns.length - 2) {
+        if(this.currentTurn > this.context.session.turns.length - 1) {
             this.stop();
             return;
         }
