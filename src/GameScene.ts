@@ -6,17 +6,17 @@ import { OutlineFilter } from '@pixi/filter-outline';
 
 
 const PLAYERS_COLORS = [
-    0xad1514,
-    0x0073ac,
-    0x009882,
-    0x009900,
-    0xbc9000,
-    0xab0196,
-    0x000092,
-    0xc94c00,
+    0xff1b5b,
+    0x3effc2,
+    0xffa651,
+    0xc051ff,
+    0xff1bfc,
+    0x6d50ff,
+    0xfbff59,
+    0x3eebff,
 ];
 
-const NEUTRAL_COLOR = 0x555555;
+const NEUTRAL_COLOR = 0x5dff5f;
 
 const AREA_OUTLINE_COLOR = 0x000;
 
@@ -50,7 +50,7 @@ export class Area {
         
         this.shadow = new PIXI.Graphics();
         this.shadow.beginFill(SHADOW_COLOR);
-        this.shadow.drawEllipse(this.centerX + 5, this.centerY + 5, 5, 5);
+        this.shadow.drawEllipse(this.centerX + 5, this.centerY - 2, 5, 5);
         this.shadow.endFill();
         this.shadow.filters = [new PIXI.filters.BlurFilter()];
 
@@ -153,8 +153,8 @@ export class GameScene {
         });
 
         // This much space left on scene borders to draw UI
-        const paddingWidth = this.app.screen.width/6;
-        const paddingHeight = this.app.screen.height/6;
+        const paddingWidth = this.app.screen.width/20;
+        const paddingHeight = this.app.screen.height/20;
 
         const coeffWidth = (this.app.screen.width - paddingWidth)/(maxX - minX);
         const coeffHeight = (this.app.screen.height - paddingHeight)/(maxY - minY);
@@ -197,7 +197,7 @@ export class GameScene {
             this.graphicsAreas.addChild(area.shadow);
             return area;
         });
-        this.diceSpriteScale = diceSpriteScale / 2;
+        this.diceSpriteScale = diceSpriteScale * 0.9;
         
         this.drawOrder = [...Array(this.areas.length).keys()]
         this.drawOrder.sort((areaIndex1, areaIndex2) => {
