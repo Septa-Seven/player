@@ -1,16 +1,14 @@
-import { AreaModel } from './AreaModel';
 import {CommandModel} from './CommandModel'
-import {PlayerModel} from './PlayerModel'
+import {State} from './StateModel';
 
 export interface TurnModel {
-    info: {
+    turn: number,
+    
+    transition: {
         command: CommandModel;
         player: number;
+        error?: string;
     }
 
-    state: {
-        areas: AreaModel[];
-        current_player_index: number;
-        players: PlayerModel[];
-    }
+    state: State
 }

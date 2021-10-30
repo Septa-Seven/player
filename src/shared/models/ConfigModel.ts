@@ -1,6 +1,6 @@
 import {GraphModel} from './GraphModel';
 
-export interface Config {
+export interface ConfigModel {
     areas: number[][];
     eliminate_every_n_round: number;
     graph: GraphModel;

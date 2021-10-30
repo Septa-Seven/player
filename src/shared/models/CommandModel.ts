@@ -1,3 +1,9 @@
+enum CommandType {
+    EndTurn = 'end_turn',
+    Attack = 'attack',
+}
+
 export interface CommandModel {
-    attack: {from: number, to: number};
+    type: CommandType,
+    data: object;
 }
