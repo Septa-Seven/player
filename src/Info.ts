@@ -4,7 +4,7 @@ export class Info {
     constructor(container: HTMLElement, playerNames: Map<number, string>) {
         const infoContainer = document.createElement('div');
         infoContainer.classList.add("info");
-        
+
         //     <div id="info">
         //     <div class="record died">
         //       <div class="playerName">Boba</div>
@@ -16,6 +16,7 @@ export class Info {
         const records = new Map();
         for (const [id, name] of playerNames.entries()) {
             const recordContainer = document.createElement('div');
+            recordContainer.classList.add('record')
             // Name
             const nameContainer = document.createElement('p');
 
@@ -33,9 +34,11 @@ export class Info {
             // Error
             const errorContainer = document.createElement('p');
             errorContainer.classList.add("error")
-            errorContainer.innerHTML = 'Все хуево';
+            errorContainer.innerHTML = 'No errors';
             recordContainer.appendChild(errorContainer);
 
+            
+            infoContainer.appendChild(recordContainer);
             records.set(id, recordContainer);
         }
         
@@ -45,11 +48,12 @@ export class Info {
 
     set(id: number, savings: number, error?: string) {
         const recordContainer = this.records.get(id);
+        console.log(this.records.get(id))
 
         const savingsContainer = recordContainer.getElementsByClassName("savings")[0];
         savingsContainer.innerHTML = savings.toString();
         
         const errorContainer = recordContainer.getElementsByClassName("error")[0];
-        errorContainer.innerHTML = error === null ? "" : error.toString();
+        errorContainer.innerHTML = error  ? error.toString() : "";
     }
 }

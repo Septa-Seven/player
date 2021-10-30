@@ -6,6 +6,7 @@ enum CallbackMethods {
     Stop = 'stop',
     Restart = 'start',
     Rewind = 'rewind',
+    ToTurn = 'toTurn',
 }
 
 export class Player {
@@ -15,12 +16,12 @@ export class Player {
     private callbacks: Record<string, ((turn: TurnModel) => any)[]>;
 
     constructor(session: Session) {
-        // TODO: typed callbacks for each method
         this.callbacks = {
             'start': [],
             'stop': [],
             'restart': [],
             'rewind': [],
+            'toTurn': [],
         }
 
         this.session = session;
@@ -54,9 +55,10 @@ export class Player {
 
     toTurn(currentTurn: number) {
         this.currentTurn = currentTurn;
+        this.invokeCallbacks(CallbackMethods.ToTurn);
     }
 
-    private getTurn(turn: number): TurnModel {
+    getTurn(turn: number): TurnModel {
         return this.session.turns[turn];
     }
 

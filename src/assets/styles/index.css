@@ -4,9 +4,27 @@
     border: 5px solid #F60264;
     border-radius: 1px;
     margin: 20px auto;
+
+    display: flex;
+    justify-content: space-between;
+}
+
+.info {
+    height: 100%;
+    overflow-y: scroll;
+    width: 25%;
+    border-left: 1px solid black;
+}
+
+.record{
+    padding: 5px 15px;
+    border-bottom: 1px solid gray;
+    background: #5353ec;
+    color: #fff;
 }
 
 .player {
+    width: 75%;
     height: 80%;
 }
 

@@ -82,7 +82,13 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
     );
 
     const player = new Player(session);
+    gameScene.setState(player.getTurn(0).state);
+
     const buttons = createButtons(controlContainer, player);
+
+    player.subscribe('toTurn', (turn) => {
+        gameScene.setState(turn.state);
+    });
 
     slider.addEventListener("input", () => {
         player.toTurn(Number(slider.value));
@@ -95,10 +101,11 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
 
     player.subscribe('rewind', (turn) => {
         gameScene.setState(turn.state);
-    })
+    });
 
     player.subscribe('rewind', (turn) => {
-        const savings = turn.state[turn.state.current_player_index].savings;
-        info.set(turn.transition.player, savings, turn.transition.error);
+        console.log(turn)
+        const savings = turn.state.players[turn.state.current_player_index].savings;
+        info.set(turn.transition.player_id, savings, turn.transition?.error);
     })
 }

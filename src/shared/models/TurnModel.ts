@@ -6,7 +6,7 @@ export interface TurnModel {
     
     transition: {
         command: CommandModel;
-        player: number;
+        player_id: number;
         error?: string;
     }
 
