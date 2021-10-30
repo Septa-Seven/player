@@ -8,6 +8,8 @@ import { DiceNames, loadInitialResources, Textures } from "./load";
 const visualizerContainer = document.getElementById('visualizer');
 
 const session = new Session(mockData);
+session.setPlayerName(0, 'Biba');
+session.setPlayerName(1, 'BOB');
 
 const textures = loadInitialResources([
     {name: DiceNames.dice0, url: 'images/0.png'},

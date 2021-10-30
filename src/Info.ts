@@ -1,9 +1,10 @@
-export class Table {
-    records: Map<number, HTMLDivElement>;
+export class Info {
+    records: Map<number, HTMLElement>;
     
-    constructor(container: HTMLDivElement, players: {id: number, name: string}[]) {
-        const tableContainer = document.createElement('div');
-        tableContainer.classList.add("table");
+    constructor(container: HTMLElement, playerNames: Map<number, string>) {
+        const infoContainer = document.createElement('div');
+        infoContainer.classList.add("info");
+        
         //     <div id="info">
         //     <div class="record died">
         //       <div class="playerName">Boba</div>
@@ -12,15 +13,13 @@ export class Table {
         //     </div>
         //   </div>
 
-        
         const records = new Map();
-        players.forEach(({id, name}) => {
+        for (const [id, name] of playerNames.entries()) {
             const recordContainer = document.createElement('div');
             // Name
             const nameContainer = document.createElement('p');
-            if (name !== null) {
-                nameContainer.innerHTML = name;
-            }
+
+            nameContainer.innerHTML = name;
 
             nameContainer.classList.add("name")
             recordContainer.appendChild(nameContainer);
@@ -38,9 +37,9 @@ export class Table {
             recordContainer.appendChild(errorContainer);
 
             records.set(id, recordContainer);
-        });
+        }
         
-        container.appendChild(tableContainer);
+        container.appendChild(infoContainer);
         this.records = records;
     }
 
@@ -49,8 +48,8 @@ export class Table {
 
         const savingsContainer = recordContainer.getElementsByClassName("savings")[0];
         savingsContainer.innerHTML = savings.toString();
-
+        
         const errorContainer = recordContainer.getElementsByClassName("error")[0];
-        errorContainer.innerHTML = error.toString();
+        errorContainer.innerHTML = error === null ? "" : error.toString();
     }
 }

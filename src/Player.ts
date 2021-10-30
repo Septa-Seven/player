@@ -1,19 +1,20 @@
-import {AbstractPlayerContext} from './PlayerContext';
+import { Session } from './Session';
+import { TurnModel } from './shared/models/TurnModel';
 
-export interface IPlayer {
-    start: () => void;
-    stop: () => void;
-    restart: () => void;
-    subscribe: (method: string, callback: () => any) => void;
+enum CallbackMethods {
+    Start = 'start',
+    Stop = 'stop',
+    Restart = 'start',
+    Rewind = 'rewind',
 }
 
-export class Player implements IPlayer {
-    private context: AbstractPlayerContext;
+export class Player {
+    private session: Session;
     private currentTurn: number;
     private timer: NodeJS.Timeout;
-    private callbacks: Record<string, ((turn: any) => any)[]>;
+    private callbacks: Record<string, ((turn: TurnModel) => any)[]>;
 
-    constructor(context: AbstractPlayerContext) {
+    constructor(session: Session) {
         // TODO: typed callbacks for each method
         this.callbacks = {
             'start': [],
@@ -22,13 +23,12 @@ export class Player implements IPlayer {
             'rewind': [],
         }
 
-        this.context = context;
+        this.session = session;
 
         this.currentTurn = 0;
-        this.drawTurn(this.currentTurn);
     }
     
-    subscribe(method: string, callback: (turn: any) => any) {
+    subscribe(method: string, callback: (turn: TurnModel) => any) {
         this.callbacks[method].push(callback);
     }
 
@@ -38,37 +38,41 @@ export class Player implements IPlayer {
             this.timer = timer;
         }
         
-        this.callbacks['start'].forEach((callback) => callback());
+        this.invokeCallbacks(CallbackMethods.Start);
     }
 
     restart() {
         this.toTurn(0);
-        this.callbacks['restart'].forEach((callback) => callback());
+        this.invokeCallbacks(CallbackMethods.Restart);
     }
 
     stop() {
         clearInterval(this.timer);
         this.timer = null;
-        this.callbacks['stop'].forEach((callback) => callback());
+        this.invokeCallbacks(CallbackMethods.Stop);
     }
 
     toTurn(currentTurn: number) {
         this.currentTurn = currentTurn;
-        this.drawTurn(this.currentTurn);
     }
 
-    private drawTurn(currentTurn: number) {
-        this.context.gameScene.setState(this.context.session.turns[this.currentTurn].state);
+    private getTurn(turn: number): TurnModel {
+        return this.session.turns[turn];
     }
 
     private rewind() {
-        if(this.currentTurn > this.context.session.turns.length - 1) {
+        if(this.currentTurn > this.session.turns.length - 1) {
             this.stop();
             return;
         }
-        this.drawTurn(this.currentTurn);
         this.currentTurn++;
 
-        this.callbacks['rewind'].forEach((callback) => callback(this.currentTurn));
+        this.invokeCallbacks(CallbackMethods.Rewind);
+    }
+
+    private invokeCallbacks(method: CallbackMethods) {
+        this.callbacks[method].forEach((callback) => {
+            callback(this.getTurn(this.currentTurn))
+        });
     }
 }

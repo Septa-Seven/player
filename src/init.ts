@@ -1,14 +1,14 @@
-import { IPlayer, Player } from "./Player";
-import { PlayerContext } from "./PlayerContext";
+import { Player } from "./Player";
 import { Session } from "./Session";
 import { Textures } from "./load";
-import { Table } from "./Table";
+import { Info } from "./Info";
+import { GameScene } from "./GameScene";
 
 
 const buttonTypes = ['start', 'stop'];
 
 
-export const createButtons = (container: HTMLElement, player: IPlayer) => {
+export const createButtons = (container: HTMLElement, player: Player) => {
     let buttons: Record<string, HTMLElement> = {};
     const buttonsContainer = document.createElement("div");    
 
@@ -72,10 +72,16 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
 
     const controlContainer = createControlContainer(playerContainer);
     const slider = createSlider(controlContainer, session.turns.length);
-    
-    const playerContext = new PlayerContext(session, gameSceneContainer, textures);
 
-    const player = new Player(playerContext);
+    const info = new Info(container, session.playerNames);
+    
+    const gameScene = new GameScene(
+        session.config,
+        gameSceneContainer,
+        textures,
+    );
+
+    const player = new Player(session);
     const buttons = createButtons(controlContainer, player);
 
     slider.addEventListener("input", () => {
@@ -84,6 +90,15 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
     });
 
     player.subscribe('rewind', (turn) => {
-        slider.value = turn;
+        slider.value = turn.turn.toString();
     });
+
+    player.subscribe('rewind', (turn) => {
+        gameScene.setState(turn.state);
+    })
+
+    player.subscribe('rewind', (turn) => {
+        const savings = turn.state[turn.state.current_player_index].savings;
+        info.set(turn.transition.player, savings, turn.transition.error);
+    })
 }

@@ -1,8 +1,9 @@
 import * as PIXI from 'pixi.js';
 import polylabel from 'polylabel';
-import { Config } from './shared/models/Config';
+import { Config } from './shared/models/ConfigModel';
 import {Textures} from './load';
 import { OutlineFilter } from '@pixi/filter-outline';
+import { State } from './shared/models/StateModel';
 
 
 const PLAYERS_COLORS = [
@@ -225,7 +226,7 @@ export class GameScene {
         });
     }
 
-    setState(state) {
+    setState(state: State) {
         this.graphicsAreas.clear();
 
         state.areas.forEach((areaData, index) => {
