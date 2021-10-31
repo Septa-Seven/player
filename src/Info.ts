@@ -1,3 +1,6 @@
+import {difference} from './utils/difference';
+
+
 export class Info {
     records: Map<number, HTMLElement>;
     
@@ -5,18 +8,11 @@ export class Info {
         const infoContainer = document.createElement('div');
         infoContainer.classList.add("info");
 
-        //     <div id="info">
-        //     <div class="record died">
-        //       <div class="playerName">Boba</div>
-        //       <div class="savings">5</div>
-        //       <div class="status">Disconnected</div>
-        //     </div>
-        //   </div>
-
         const records = new Map();
         for (const [id, name] of playerNames.entries()) {
             const recordContainer = document.createElement('div');
             recordContainer.classList.add('record')
+            
             // Name
             const nameContainer = document.createElement('p');
 
@@ -34,7 +30,6 @@ export class Info {
             // Error
             const errorContainer = document.createElement('p');
             errorContainer.classList.add("error")
-            errorContainer.innerHTML = 'No errors';
             recordContainer.appendChild(errorContainer);
 
             
@@ -46,14 +41,35 @@ export class Info {
         this.records = records;
     }
 
-    set(id: number, savings: number, error?: string) {
+    setSavings(id: number, savings: number) {
         const recordContainer = this.records.get(id);
-        console.log(this.records.get(id))
 
         const savingsContainer = recordContainer.getElementsByClassName("savings")[0];
         savingsContainer.innerHTML = savings.toString();
         
+    }
+
+    setError(id: number, error: string) {
+        const recordContainer = this.records.get(id);
         const errorContainer = recordContainer.getElementsByClassName("error")[0];
         errorContainer.innerHTML = error  ? error.toString() : "";
     }
+
+    elimination(alivePlayers: number[]) {
+        const all = new Set(this.records.keys());
+        const alive = new Set(alivePlayers);
+
+        const deadPlayers = difference(all, alive);
+
+        for (const id of deadPlayers) {
+            const infoContainer = this.records.get(id);
+            infoContainer.classList.add('eliminated');
+        }
+
+        for (const id of alive) {
+            const infoContainer = this.records.get(id);
+            infoContainer.classList.remove('eliminated');
+        }
+    }
 }
+

@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import polylabel from 'polylabel';
-import { Config } from './shared/models/ConfigModel';
+import { ConfigModel } from './shared/models/ConfigModel';
 import {Textures} from './load';
 import { OutlineFilter } from '@pixi/filter-outline';
 import { State } from './shared/models/StateModel';
@@ -117,7 +117,7 @@ export class GameScene {
     private textures;
     private diceSpriteScale: number;
 
-    constructor(config: Config, container: HTMLElement, textures: Textures) {
+    constructor(config: ConfigModel, container: HTMLElement, textures: Textures) {
         this.graphicsAreas = new PIXI.Graphics();
         let app = new PIXI.Application({
             width: container.clientWidth,

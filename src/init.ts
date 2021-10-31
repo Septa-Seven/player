@@ -5,7 +5,7 @@ import { Info } from "./Info";
 import { GameScene } from "./GameScene";
 
 
-const buttonTypes = ['start', 'stop'];
+const buttonTypes = ['to start', 'start', 'to end'];
 
 
 export const createButtons = (container: HTMLElement, player: Player) => {
@@ -26,9 +26,27 @@ export const createButtons = (container: HTMLElement, player: Player) => {
     });
 
     container.appendChild(buttonsContainer);
-    
-    buttons['start'].addEventListener('click', player.start.bind(player))
-    buttons['stop'].addEventListener('click', player.stop.bind(player))
+
+    const startButton = buttons['start'];
+    startButton.dataset.state = 'start';
+
+    startButton.addEventListener('click', () => {
+        if(startButton.dataset.state === 'start') {
+            player.start.call(player);
+            startButton.dataset.state = 'stop';
+            startButton.innerHTML = 'stop'
+        }
+
+        else {
+            player.stop.call(player);
+            startButton.dataset.state = 'start';
+            startButton.innerHTML = 'start'
+        }
+
+    })
+
+    buttons['to start'].addEventListener('click', player.toTurn.bind(player, 0))
+    buttons['to end'].addEventListener('click', player.toTurn.bind(player, -1))
 }
 
 const createSlider = (container: HTMLElement, turns: number): HTMLInputElement => {
@@ -51,11 +69,31 @@ const createControlContainer = (container: HTMLElement): HTMLElement => {
     return controlContainer;
 }
 
+const createBottomContainer = (container: HTMLElement): HTMLElement => {
+    const bottomContainer = document.createElement('div');
+    bottomContainer.classList.add('bottom-container');
+    container.appendChild(bottomContainer)
+    return bottomContainer;
+}
+
+const createSpeedSlider = (container: HTMLElement): HTMLInputElement => {
+    const slider = document.createElement("input");
+    slider.classList.add('speed-slider');
+    slider.setAttribute('type', 'range');
+    slider.setAttribute('min', '15');
+    slider.setAttribute('max', '400');
+    slider.setAttribute('value', '15');
+    slider.setAttribute('step', '1');
+    
+    container.appendChild(slider);
+
+    return slider;
+}
+
 const createGameSceneContainer = (container: HTMLElement): HTMLElement => {
     const gameSceneContainer = document.createElement('div');
     gameSceneContainer.classList.add("scene");
     container.appendChild(gameSceneContainer);
-    console.log(gameSceneContainer, container);
     return gameSceneContainer;
 }
 
@@ -73,6 +111,8 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
     const controlContainer = createControlContainer(playerContainer);
     const slider = createSlider(controlContainer, session.turns.length);
 
+    const bottomContainer = createBottomContainer(controlContainer);
+
     const info = new Info(container, session.playerNames);
     
     const gameScene = new GameScene(
@@ -84,7 +124,14 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
     const player = new Player(session);
     gameScene.setState(player.getTurn(0).state);
 
-    const buttons = createButtons(controlContainer, player);
+    const buttons = createButtons(bottomContainer, player);
+
+    const speedSlider = createSpeedSlider(bottomContainer);
+
+    speedSlider.addEventListener("input", () => {
+        console.log(Number(speedSlider.value))
+        player.setSpeed(Number(speedSlider.value))
+    });
 
     player.subscribe('toTurn', (turn) => {
         gameScene.setState(turn.state);
@@ -95,17 +142,30 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
         player.stop();
     });
 
-    player.subscribe('rewind', (turn) => {
+    player.subscribe('toTurn', (turn) => {
         slider.value = turn.turn.toString();
     });
-
-    player.subscribe('rewind', (turn) => {
+ 
+    player.subscribe('toTurn', (turn) => {
         gameScene.setState(turn.state);
     });
 
-    player.subscribe('rewind', (turn) => {
-        console.log(turn)
-        const savings = turn.state.players[turn.state.current_player_index].savings;
-        info.set(turn.transition.player_id, savings, turn.transition?.error);
-    })
+    player.subscribe('toTurn', (turn) => {
+        turn.state.players.forEach(({id, savings}) => {
+            info.setSavings(id, savings);
+        });
+        
+        if (turn.transition.error) {
+            info.setError(
+                turn.transition.player_id,
+                turn.transition.error,
+            )
+        }
+        
+        info.elimination(turn.state.players.map(({id}) => id));
+    });
+
+    // 6. Кнопка "На начало"
+    // 7. Кнопка "В конец"
+
 }

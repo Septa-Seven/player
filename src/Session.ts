@@ -9,16 +9,21 @@ export class Session {
     ranks: RanksModel;
 
     constructor(logs) {
-        const parsedDate = logs.split('\n');
-        this.config = JSON.parse(parsedDate[0]);
-        this.ranks = JSON.parse(parsedDate[parsedDate.length - 1]);
+        const parsedData = logs.split('\n');
+        this.config = JSON.parse(parsedData[0]);
+        this.ranks = JSON.parse(parsedData[parsedData.length - 1]);
 
-        const parsedLogs = parsedDate.slice(1, parsedDate.length - 1).map((log) => JSON.parse(log));
-        const turns = [];
-        for(let i = 0; i < parsedLogs.length; i += 2) {
+        const parsedLogs = parsedData.slice(1, parsedData.length - 1).map((log) => JSON.parse(log));
+        const turns = [{
+            turn: 0,
+            state: parsedLogs[0],
+            transition: null,
+        }];
+        
+        for(let i = 2; i < parsedLogs.length; i += 2) {
             const turn = {
                 turn: i / 2,
-                transition: parsedLogs[i + 1],
+                transition: parsedLogs[i - 1],
                 state: parsedLogs[i],
             }
             turns.push(turn);

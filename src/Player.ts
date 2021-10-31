@@ -5,7 +5,6 @@ enum CallbackMethods {
     Start = 'start',
     Stop = 'stop',
     Restart = 'start',
-    Rewind = 'rewind',
     ToTurn = 'toTurn',
 }
 
@@ -14,19 +13,20 @@ export class Player {
     private currentTurn: number;
     private timer: NodeJS.Timeout;
     private callbacks: Record<string, ((turn: TurnModel) => any)[]>;
+    private rewindSpeed: number;
 
     constructor(session: Session) {
         this.callbacks = {
             'start': [],
             'stop': [],
             'restart': [],
-            'rewind': [],
             'toTurn': [],
         }
 
         this.session = session;
 
         this.currentTurn = 0;
+        this.rewindSpeed = 50;
     }
     
     subscribe(method: string, callback: (turn: TurnModel) => any) {
@@ -35,7 +35,7 @@ export class Player {
 
     start() {
         if (!this.timer) {
-            const timer = setInterval(() => this.rewind(), 200);
+            const timer = setInterval(() => this.rewind(), this.rewindSpeed);
             this.timer = timer;
         }
         
@@ -54,6 +54,9 @@ export class Player {
     }
 
     toTurn(currentTurn: number) {
+        if (currentTurn < 0) {
+            currentTurn = this.session.turns.length + currentTurn;
+        }
         this.currentTurn = currentTurn;
         this.invokeCallbacks(CallbackMethods.ToTurn);
     }
@@ -62,14 +65,21 @@ export class Player {
         return this.session.turns[turn];
     }
 
+    setSpeed(speed: number) {
+        this.rewindSpeed = speed;
+        if (this.timer) {
+            clearInterval(this.timer);
+            const timer = setInterval(() => this.rewind(), this.rewindSpeed);
+            this.timer = timer;
+        }
+    }
+
     private rewind() {
-        if(this.currentTurn > this.session.turns.length - 1) {
+        if (this.currentTurn > this.session.turns.length - 1) {
             this.stop();
             return;
         }
-        this.currentTurn++;
-
-        this.invokeCallbacks(CallbackMethods.Rewind);
+        this.toTurn(this.currentTurn + 1);
     }
 
     private invokeCallbacks(method: CallbackMethods) {

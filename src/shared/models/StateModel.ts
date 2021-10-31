@@ -4,5 +4,5 @@ export interface State {
     areas: {owner: number, dices: number}[];
     round: number;
     current_player_index: number,
-    players: PlayerModel,
+    players: PlayerModel[],
 }
