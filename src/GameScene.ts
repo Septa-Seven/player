@@ -38,42 +38,24 @@ export class Area {
     polygon: PIXI.Polygon;
     centerX: number;
     centerY: number;
+    size: number;
 
-    constructor(index, polygon) {
+    constructor(index, polygon, centerX, centerY, size) {
+        this.centerX = centerX;
+        this.centerY = centerY;
+
         this.dicesGraphics = new PIXI.Graphics();
         this.dicesGraphics.filters = [
             new OutlineFilter(2, DICE_OUTLINE_COLOR),
         ];
         this.backgroundGraphics = new PIXI.Graphics();
 
-        const p = [...polygon];
-        p.push(polygon[0]);
-
-        const polygonFeature = {
-            "type": "Feature",
-            "geometry": {
-                "type": "Polygon",
-                "coordinates": [p]
-            },
-            "properties": {
-                "id": 1
-            }
-        };
-
-        const circleFeature = maxInscribedCircle(polygonFeature);
-        [this.centerX, this.centerY] = circleFeature.geometry.coordinates;
-        const r = circleFeature.properties.radius;
-
-        this.polygon = new PIXI.Polygon(polygon.flat());
+        this.polygon = new PIXI.Polygon(polygon);
         
-        this.shadow = new PIXI.Graphics();
-        this.shadow.beginFill(SHADOW_COLOR);
-        this.shadow.drawCircle(this.centerX, this.centerY, r);
-        this.shadow.drawEllipse(this.centerX + 5, this.centerY - 2, 5, 5);
-        this.shadow.endFill();
-        this.shadow.filters = [new PIXI.filters.BlurFilter()];
-
         this.index = index;
+        this.size = size;
+
+        this.drawShadow();
     }
 
     update(owner: number, dices: number) {
@@ -81,19 +63,19 @@ export class Area {
         this.dices = dices;
     }
 
-    drawDices(scale: number, texture: PIXI.Texture) {
+    drawDices(texture: PIXI.Texture) {
         // Dices
         this.dicesGraphics.removeChildren();
-        if (this.dices < 5) {
-            this.drawTower(this.centerX, this.centerY, scale, texture, this.dices);
+        if(this.dices < 5) {
+            this.drawTower(this.centerX, this.centerY, texture, this.dices);
         } else {
-            const offsetX = scale / 2;
-            const offsetY = scale / 4;
+            const offsetX = this.size / 2;
+            const offsetY = this.size / 4;
             
             // Left
-            this.drawTower(this.centerX - offsetX, this.centerY - offsetY, scale, texture, this.dices - 4);
+            this.drawTower(this.centerX - offsetX, this.centerY - offsetY, texture, this.dices - 4);
             // Right tower
-            this.drawTower(this.centerX + offsetX, this.centerY + offsetY, scale, texture, 4);
+            this.drawTower(this.centerX + offsetX, this.centerY + offsetY, texture, 4);
         }
     }
 
@@ -106,24 +88,36 @@ export class Area {
         this.backgroundGraphics.endFill();
     }
 
-    private drawTower(x: number, y: number, scale: number, texture: PIXI.Texture, count: number) {
-        const step = 1 * scale;
+    private drawTower(x: number, y: number, texture: PIXI.Texture, count: number) {
+        const step = this.size;
         for(let i = 0; i < count; i++) {
-            this.drawDice(x, y, scale, texture);
+            this.drawDice(x, y, texture);
             y -= step;
         }
     }
 
-    private drawDice(x: number, y: number, scale: number, texture: PIXI.Texture) {
+    private drawDice(x: number, y: number, texture: PIXI.Texture) {
         const sprite = new PIXI.Sprite(texture);
         sprite.anchor.set(0.5);
         sprite.x = x;
         sprite.y = y;
 
         const maxSide = Math.max(sprite.width, sprite.height)
-        sprite.width = 2 * sprite.width/maxSide * scale;
-        sprite.height = 2 * sprite.height/maxSide * scale;
+        sprite.width = sprite.width / maxSide * this.size;
+        sprite.height = sprite.height / maxSide * this.size;
         this.dicesGraphics.addChild(sprite);
+    }
+
+    private drawShadow() {
+        this.shadow = new PIXI.Graphics();
+        this.shadow.beginFill(SHADOW_COLOR);
+        this.shadow.drawCircle(
+            this.centerX + this.size,
+            this.centerY - this.size,
+            this.size * 1.5
+        );
+        this.shadow.endFill();
+        this.shadow.filters = [new PIXI.filters.BlurFilter(4)];
     }
 }
 
@@ -133,7 +127,6 @@ export class GameScene {
     private app: PIXI.Application;
     private graphicsAreas: PIXI.Graphics;
     private textures;
-    private diceSpriteScale: number;
 
     constructor(config: ConfigModel, container: HTMLElement, textures: Textures) {
         this.graphicsAreas = new PIXI.Graphics();
@@ -192,31 +185,35 @@ export class GameScene {
             shiftY = screenCenterY - minCoeff * areaCenterY;
         }
 
-        let diceSpriteScale = Infinity;
+        let diceSize = Infinity;
         
-        this.areas = config.areas.map((rawPolygon, index) => {
+        const areaPolygons = config.areas.map((rawPolygon, index) => {
             let polygon = rawPolygon.map(([x, y]) => [
                 x * minCoeff + shiftX,
                 y * minCoeff + shiftY,
             ]);
 
-            let area = new Area(index, polygon);
+            const [centerX, centerY] = polylabel([polygon], 100);
 
             polygon.forEach(([x, y]) => {
                 const distance = Math.sqrt(
-                    Math.pow(x - area.centerX, 2) + Math.pow(y - area.centerY, 2));
+                    Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
                 
-                if (diceSpriteScale > distance) {
-                    diceSpriteScale = distance;
+                if (diceSize > distance) {
+                    diceSize = distance;
                 }
             });
+            return [polygon.flat(), centerX, centerY];
+        });
+        
+        diceSize = diceSize * 0.9;
 
-            // Register area graphics
+        this.areas = areaPolygons.map(([polygon, centerX, centerY], index) => {
+            const area = new Area(index, polygon, centerX, centerY, diceSize);
             this.graphicsAreas.addChild(area.backgroundGraphics);
             this.graphicsAreas.addChild(area.shadow);
             return area;
         });
-        this.diceSpriteScale = diceSpriteScale * 0.9;
         
         this.drawOrder = [...Array(this.areas.length).keys()]
         this.drawOrder.sort((areaIndex1, areaIndex2) => {
@@ -272,7 +269,7 @@ export class GameScene {
             } else {
                 textureName = 'dice' + area.owner;
             }
-            area.drawDices(this.diceSpriteScale, this.textures[textureName]);
+            area.drawDices(this.textures[textureName]);
         });
     }
 }

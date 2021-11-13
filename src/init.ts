@@ -3,7 +3,7 @@ import { Session } from "./Session";
 import { Textures } from "./load";
 import { Info } from "./Info";
 import { GameScene } from "./GameScene";
-
+import {createIcon} from './utils/createIcon'
 
 enum ButtonType {
     Start = 'Start',
@@ -20,6 +20,7 @@ export const createButtons = (container: HTMLElement) => {
         const button = document.createElement("button");
         button.setAttribute('id', buttonType)
         button.setAttribute('class', 'button')
+        createIcon(button, 'fa-user');
         button.innerHTML = buttonType;
         buttons[buttonType] = button;
     }

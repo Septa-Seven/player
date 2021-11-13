@@ -1,5 +1,4 @@
 import './assets/styles/index.css';
-// import './assets/styles/slider.css';
 
 import { mockData } from './shared/models/mock';
 import { Session } from "./Session";
