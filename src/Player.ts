@@ -2,7 +2,7 @@ import { Session } from './Session';
 import { TurnModel } from './shared/models/TurnModel';
 
 enum CallbackMethods {
-    Start = 'start',
+    Play = 'play',
     Stop = 'stop',
     Restart = 'start',
     ToTurn = 'toTurn',
@@ -17,7 +17,7 @@ export class Player {
 
     constructor(session: Session) {
         this.callbacks = {
-            'start': [],
+            'play': [],
             'stop': [],
             'restart': [],
             'toTurn': [],
@@ -33,13 +33,13 @@ export class Player {
         this.callbacks[method].push(callback);
     }
 
-    start() {
+    play() {
         if (!this.timer) {
             const timer = setInterval(() => this.rewind(), this.rewindSpeed);
             this.timer = timer;
         }
         
-        this.invokeCallbacks(CallbackMethods.Start);
+        this.invokeCallbacks(CallbackMethods.Play);
     }
 
     restart() {

@@ -5,21 +5,24 @@ import { Info } from "./Info";
 import { GameScene } from "./GameScene";
 
 
-const buttonTypes = ['to start', 'start', 'to end'];
+enum ButtonType {
+    Start = 'Start',
+    Play = 'Play',
+    End = 'End',
+}
 
-
-export const createButtons = (container: HTMLElement, player: Player) => {
+export const createButtons = (container: HTMLElement) => {
     let buttons: Record<string, HTMLElement> = {};
     const buttonsContainer = document.createElement("div");    
 
     buttonsContainer.classList.add("buttons");
-    buttonTypes.forEach((type) => {
+    for (let buttonType in ButtonType) {
         const button = document.createElement("button");
-        button.setAttribute('id', type)
+        button.setAttribute('id', buttonType)
         button.setAttribute('class', 'button')
-        button.innerHTML = type;
-        buttons[type] = button;
-    });
+        button.innerHTML = buttonType;
+        buttons[buttonType] = button;
+    }
 
     Object.values(buttons).forEach((button) => {
         buttonsContainer.appendChild(button)
@@ -27,26 +30,7 @@ export const createButtons = (container: HTMLElement, player: Player) => {
 
     container.appendChild(buttonsContainer);
 
-    const startButton = buttons['start'];
-    startButton.dataset.state = 'start';
-
-    startButton.addEventListener('click', () => {
-        if(startButton.dataset.state === 'start') {
-            player.start.call(player);
-            startButton.dataset.state = 'stop';
-            startButton.innerHTML = 'stop'
-        }
-
-        else {
-            player.stop.call(player);
-            startButton.dataset.state = 'start';
-            startButton.innerHTML = 'start'
-        }
-
-    })
-
-    buttons['to start'].addEventListener('click', player.toTurn.bind(player, 0))
-    buttons['to end'].addEventListener('click', player.toTurn.bind(player, -1))
+    return buttons;
 }
 
 const createSlider = (container: HTMLElement, turns: number): HTMLInputElement => {
@@ -80,9 +64,9 @@ const createSpeedSlider = (container: HTMLElement): HTMLInputElement => {
     const slider = document.createElement("input");
     slider.classList.add('speed-slider');
     slider.setAttribute('type', 'range');
-    slider.setAttribute('min', '15');
-    slider.setAttribute('max', '400');
-    slider.setAttribute('value', '15');
+    slider.setAttribute('min', '0');
+    slider.setAttribute('max', '450');
+    slider.setAttribute('value', '0');
     slider.setAttribute('step', '1');
     
     container.appendChild(slider);
@@ -123,14 +107,40 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
 
     const player = new Player(session);
     gameScene.setState(player.getTurn(0).state);
+    
+    // Buttons
+    const buttons = createButtons(bottomContainer);
 
-    const buttons = createButtons(bottomContainer, player);
+    const startButton = buttons[ButtonType.Play];
+    startButton.dataset.state = 'start';
 
+    player.subscribe('play', (turn) => {
+        startButton.dataset.state = 'stop';
+        startButton.innerHTML = 'Stop';
+    });
+
+    player.subscribe('stop', (turn) => {
+        startButton.dataset.state = 'start';
+        startButton.innerHTML = 'Play';
+    });
+
+    startButton.addEventListener('click', () => {
+        if(startButton.dataset.state === 'start') {
+            player.play.call(player);
+        }
+        else {
+            player.stop.call(player);
+        }
+    });
+
+    buttons[ButtonType.Start].addEventListener('click', player.toTurn.bind(player, 0));
+    buttons[ButtonType.End].addEventListener('click', player.toTurn.bind(player, -1));
+
+    // Rewind speed
     const speedSlider = createSpeedSlider(bottomContainer);
 
     speedSlider.addEventListener("input", () => {
-        console.log(Number(speedSlider.value))
-        player.setSpeed(Number(speedSlider.value))
+        player.setSpeed(500 - Number(speedSlider.value));
     });
 
     player.subscribe('toTurn', (turn) => {
@@ -164,8 +174,4 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
         
         info.elimination(turn.state.players.map(({id}) => id));
     });
-
-    // 6. Кнопка "На начало"
-    // 7. Кнопка "В конец"
-
 }

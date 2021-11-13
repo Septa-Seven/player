@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import polylabel from 'polylabel';
+import maxInscribedCircle from 'max-inscribed-circle';
 import { ConfigModel } from './shared/models/ConfigModel';
 import {Textures} from './load';
 import { OutlineFilter } from '@pixi/filter-outline';
@@ -46,11 +46,29 @@ export class Area {
         ];
         this.backgroundGraphics = new PIXI.Graphics();
 
-        [this.centerX, this.centerY] = polylabel([polygon], 100);
+        const p = [...polygon];
+        p.push(polygon[0]);
+
+        const polygonFeature = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [p]
+            },
+            "properties": {
+                "id": 1
+            }
+        };
+
+        const circleFeature = maxInscribedCircle(polygonFeature);
+        [this.centerX, this.centerY] = circleFeature.geometry.coordinates;
+        const r = circleFeature.properties.radius;
+
         this.polygon = new PIXI.Polygon(polygon.flat());
         
         this.shadow = new PIXI.Graphics();
         this.shadow.beginFill(SHADOW_COLOR);
+        this.shadow.drawCircle(this.centerX, this.centerY, r);
         this.shadow.drawEllipse(this.centerX + 5, this.centerY - 2, 5, 5);
         this.shadow.endFill();
         this.shadow.filters = [new PIXI.filters.BlurFilter()];
@@ -66,7 +84,7 @@ export class Area {
     drawDices(scale: number, texture: PIXI.Texture) {
         // Dices
         this.dicesGraphics.removeChildren();
-        if(this.dices < 5) {
+        if (this.dices < 5) {
             this.drawTower(this.centerX, this.centerY, scale, texture, this.dices);
         } else {
             const offsetX = scale / 2;
