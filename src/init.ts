@@ -3,7 +3,7 @@ import { Session } from "./Session";
 import { Textures } from "./load";
 import { Info } from "./Info";
 import { GameScene } from "./GameScene";
-
+import {createIcon} from './utils/createIcon'
 
 const buttonTypes = ['to start', 'start', 'to end'];
 
@@ -17,6 +17,7 @@ export const createButtons = (container: HTMLElement, player: Player) => {
         const button = document.createElement("button");
         button.setAttribute('id', type)
         button.setAttribute('class', 'button')
+        createIcon(button, 'fa-user')
         button.innerHTML = type;
         buttons[type] = button;
     });
