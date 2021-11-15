@@ -69,8 +69,8 @@ export class Area {
         if(this.dices < 5) {
             this.drawTower(this.centerX, this.centerY, texture, this.dices);
         } else {
-            const offsetX = this.size / 2;
-            const offsetY = this.size / 4;
+            const offsetX = this.size / 4;
+            const offsetY = this.size / 8;
             
             // Left
             this.drawTower(this.centerX - offsetX, this.centerY - offsetY, texture, this.dices - 4);
@@ -89,7 +89,7 @@ export class Area {
     }
 
     private drawTower(x: number, y: number, texture: PIXI.Texture, count: number) {
-        const step = this.size;
+        const step = this.size / 2;
         for(let i = 0; i < count; i++) {
             this.drawDice(x, y, texture);
             y -= step;
@@ -112,12 +112,12 @@ export class Area {
         this.shadow = new PIXI.Graphics();
         this.shadow.beginFill(SHADOW_COLOR);
         this.shadow.drawCircle(
-            this.centerX + this.size,
-            this.centerY - this.size,
-            this.size * 1.5
+            this.centerX + this.size/4,
+            this.centerY + this.size/4,
+            this.size / 2
         );
         this.shadow.endFill();
-        this.shadow.filters = [new PIXI.filters.BlurFilter(4)];
+        this.shadow.filters = [new PIXI.filters.BlurFilter(1)];
     }
 }
 
@@ -154,9 +154,8 @@ export class GameScene {
         let minY = Infinity;
         let maxX = -Infinity;
         let maxY = -Infinity;
-
-        config.areas.forEach(rawPolygon => {
-            rawPolygon.map(([x, y]) => {
+        config.visuals.forEach(({polygon}) => {
+            polygon.forEach(([x, y]) => {
                 minX = Math.min(x, minX);
                 minY = Math.min(y, minY);
                 maxX = Math.max(x, maxX);
@@ -187,29 +186,32 @@ export class GameScene {
 
         let diceSize = Infinity;
         
-        const areaPolygons = config.areas.map((rawPolygon, index) => {
-            let polygon = rawPolygon.map(([x, y]) => [
-                x * minCoeff + shiftX,
-                y * minCoeff + shiftY,
+        const areaPolygons = config.visuals.map(({polygon, center, radius}) => {
+            polygon = polygon.map(([x, y]) => [
+                Math.round(x * minCoeff + shiftX),
+                Math.round(y * minCoeff + shiftY),
             ]);
 
-            const [centerX, centerY] = polylabel([polygon], 100);
+            radius *= minCoeff;
 
-            polygon.forEach(([x, y]) => {
-                const distance = Math.sqrt(
-                    Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-                
-                if (diceSize > distance) {
-                    diceSize = distance;
-                }
-            });
-            return [polygon.flat(), centerX, centerY];
+            if (diceSize > radius) {
+                diceSize = radius;
+            }
+
+            let [centerX, centerY] = center;
+            centerX = centerX * minCoeff + shiftX;
+            centerY = centerY * minCoeff + shiftY;
+
+            return [polygon, centerX, centerY, radius];
         });
-        
-        diceSize = diceSize * 0.9;
 
-        this.areas = areaPolygons.map(([polygon, centerX, centerY], index) => {
-            const area = new Area(index, polygon, centerX, centerY, diceSize);
+        console.log(areaPolygons.map(([p, c, c1, r]) => p))
+        console.log(diceSize);
+        
+        diceSize = 1.9 * diceSize;
+
+        this.areas = areaPolygons.map(([polygon, centerX, centerY, radius], index) => {
+            const area = new Area(index, polygon.flat(), centerX, centerY, radius);
             this.graphicsAreas.addChild(area.backgroundGraphics);
             this.graphicsAreas.addChild(area.shadow);
             return area;
