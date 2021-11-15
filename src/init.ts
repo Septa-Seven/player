@@ -4,6 +4,9 @@ import { Textures } from "./load";
 import { Info } from "./Info";
 import { GameScene } from "./GameScene";
 import {createIcon} from './utils/createIcon'
+import { CommandType } from "./shared/models/CommandModel";
+
+const SELECTED_AREA_COLOR = 0x111;
 
 enum ButtonType {
     Start = 'Start',
@@ -134,8 +137,8 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
         }
     });
 
-    buttons[ButtonType.Start].addEventListener('click', player.toTurn.bind(player, 0));
-    buttons[ButtonType.End].addEventListener('click', player.toTurn.bind(player, -1));
+    buttons[ButtonType.Start].addEventListener('click', player.jumpToTurn.bind(player, 0));
+    buttons[ButtonType.End].addEventListener('click', player.jumpToTurn.bind(player, -1));
 
     // Rewind speed
     const speedSlider = createSpeedSlider(bottomContainer);
@@ -144,24 +147,47 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
         player.setSpeed(500 - Number(speedSlider.value));
     });
 
-    player.subscribe('toTurn', (turn) => {
+    // Game scene draw and attack animation
+    player.subscribe('rewind', (turn) => {
+        // Attack animation
+        if (turn.transition && turn.transition.command.type == CommandType.Attack) {
+            const command = turn.transition.command;
+            
+            const fromIndex = command.data.from;
+            const toIndex = command.data.to;
+            
+            const areaFrom = gameScene.getArea(fromIndex);
+            const areaTo = gameScene.getArea(toIndex);
+
+            // Select area from
+            areaFrom.drawBackground(SELECTED_AREA_COLOR);
+
+            // Then select area to
+            setTimeout(() => {
+                areaTo.drawBackground(SELECTED_AREA_COLOR);
+            }, 1);
+
+            // Then transit to new state
+            // TODO: Auto rewind
+            setTimeout(() => {
+                // Manual update of only two involved areas to gain performance
+                const fromData = turn.state.areas[fromIndex];
+                const toData = turn.state.areas[toIndex];
+                areaFrom.update(fromData.owner, fromData.dices);
+                areaTo.update(toData.owner, toData.dices);
+                gameScene.redrawArea(fromIndex);
+                gameScene.redrawArea(toIndex);
+            }, player.rewindSpeed - 5);
+        } else {
+            gameScene.setState(turn.state);
+        }
+    });
+
+    player.subscribe('jumpToTurn', (turn) => {
+        // Fully update game scene
         gameScene.setState(turn.state);
-    });
-
-    slider.addEventListener("input", () => {
-        player.toTurn(Number(slider.value));
-        player.stop();
-    });
-
-    player.subscribe('toTurn', (turn) => {
-        slider.value = turn.turn.toString();
-    });
- 
-    player.subscribe('toTurn', (turn) => {
-        gameScene.setState(turn.state);
-    });
-
-    player.subscribe('toTurn', (turn) => {
+        
+        // Update info
         turn.state.players.forEach(({id, savings}) => {
             info.setSavings(id, savings);
         });
@@ -174,5 +200,16 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
         }
         
         info.elimination(turn.state.players.map(({id}) => id));
+    })
+
+    player.subscribe('changeTurn', (turn) => {
+        // Update slider
+        slider.value = turn.turn.toString();
+    });
+
+    // Turn slider
+    slider.addEventListener("input", () => {
+        player.jumpToTurn(Number(slider.value));
+        player.stop();
     });
 }

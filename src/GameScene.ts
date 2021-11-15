@@ -17,6 +17,19 @@ const PLAYERS_COLORS = [
     0x3eebff,
 ];
 
+const DICES_COLORS = [
+    [1, 0.7, 0.8],
+    [0.7, 1, 0.9],
+    [1, 0.7, 0.5],
+    [0.8, 0.5, 1],
+    [1, 0.5, 0.95],
+    [0.6, 0.5, 1],
+    [0.95, 1, 0.5],
+    [0.4, 0.8, 1],
+    [0.3, 0.3, 0.3]
+];
+
+
 const NEUTRAL_COLOR = 0x5dff5f;
 
 const AREA_OUTLINE_COLOR = 0x000;
@@ -39,6 +52,9 @@ export class Area {
     centerX: number;
     centerY: number;
     size: number;
+    color: number;
+    offsetX: number;
+    offsetY: number;
 
     constructor(index, polygon, centerX, centerY, size) {
         this.centerX = centerX;
@@ -54,6 +70,8 @@ export class Area {
         
         this.index = index;
         this.size = size;
+        this.offsetX = this.size / 4;
+        this.offsetY = this.size / 8;
 
         this.drawShadow();
     }
@@ -64,48 +82,60 @@ export class Area {
     }
 
     drawDices(texture: PIXI.Texture) {
-        // Dices
-        this.dicesGraphics.removeChildren();
-        if(this.dices < 5) {
-            this.drawTower(this.centerX, this.centerY, texture, this.dices);
-        } else {
-            const offsetX = this.size / 4;
-            const offsetY = this.size / 8;
-            
-            // Left
-            this.drawTower(this.centerX - offsetX, this.centerY - offsetY, texture, this.dices - 4);
-            // Right tower
-            this.drawTower(this.centerX + offsetX, this.centerY + offsetY, texture, 4);
+        // Create reusable sprites
+        if (this.dicesGraphics.children.length < this.dices) {
+            for (let i = this.dicesGraphics.children.length; i < this.dices; i++) {
+                const sprite = new PIXI.Sprite(texture);
+                sprite.anchor.set(0.5);
+
+                const maxSide = Math.max(sprite.width, sprite.height)
+                sprite.width = sprite.width / maxSide * this.size;
+                sprite.height = sprite.height / maxSide * this.size;
+
+                sprite.filters = [new PIXI.filters.ColorMatrixFilter()]
+                
+                this.dicesGraphics.addChild(sprite);
+                
+                // Dices 4 - 7 will stand still with constant coordinates
+                if (i > 3) {
+                    sprite.x = this.centerX - this.offsetX;
+                    sprite.y = this.centerY - (i - 5) * this.size / 2 - this.offsetY;
+                }
+            }
+        }
+
+        // Activate all used dices
+        for (let i = 0; i < this.dices; i++) {
+            const sprite = this.dicesGraphics.getChildAt(i);
+            sprite.visible = true;
+            if (!Object.is(sprite.texture, texture)) {
+                sprite.texture = texture;
+            }
+        }
+
+        // Deactivate unused dices
+        for (let i = this.dices; i < this.dicesGraphics.children.length; i++) {
+            const sprite = this.dicesGraphics.getChildAt(i);
+            sprite.visible = false;
+        }
+
+        // Change positions of right tower
+        for (let i = 0; i < Math.min(4, this.dices); i++) {
+            const sprite = this.dicesGraphics.getChildAt(i);
+            sprite.x = this.centerX + this.offsetX;
+            sprite.y = this.centerY - i * this.size / 2 + this.offsetY;
         }
     }
 
     drawBackground(color) {
+        this.color = color;
+
         this.backgroundGraphics.clear();
         // Outline
         this.backgroundGraphics.lineStyle(2, AREA_OUTLINE_COLOR, 1);
         this.backgroundGraphics.beginFill(color);
         this.backgroundGraphics.drawPolygon(this.polygon);
         this.backgroundGraphics.endFill();
-    }
-
-    private drawTower(x: number, y: number, texture: PIXI.Texture, count: number) {
-        const step = this.size / 2;
-        for(let i = 0; i < count; i++) {
-            this.drawDice(x, y, texture);
-            y -= step;
-        }
-    }
-
-    private drawDice(x: number, y: number, texture: PIXI.Texture) {
-        const sprite = new PIXI.Sprite(texture);
-        sprite.anchor.set(0.5);
-        sprite.x = x;
-        sprite.y = y;
-
-        const maxSide = Math.max(sprite.width, sprite.height)
-        sprite.width = sprite.width / maxSide * this.size;
-        sprite.height = sprite.height / maxSide * this.size;
-        this.dicesGraphics.addChild(sprite);
     }
 
     private drawShadow() {
@@ -202,16 +232,11 @@ export class GameScene {
             centerX = centerX * minCoeff + shiftX;
             centerY = centerY * minCoeff + shiftY;
 
-            return [polygon, centerX, centerY, radius];
+            return [polygon, centerX, centerY];
         });
 
-        console.log(areaPolygons.map(([p, c, c1, r]) => p))
-        console.log(diceSize);
-        
-        diceSize = 1.9 * diceSize;
-
-        this.areas = areaPolygons.map(([polygon, centerX, centerY, radius], index) => {
-            const area = new Area(index, polygon.flat(), centerX, centerY, radius);
+        this.areas = areaPolygons.map(([polygon, centerX, centerY], index) => {
+            const area = new Area(index, polygon.flat(), centerX, centerY, diceSize);
             this.graphicsAreas.addChild(area.backgroundGraphics);
             this.graphicsAreas.addChild(area.shadow);
             return area;
@@ -248,30 +273,40 @@ export class GameScene {
 
         state.areas.forEach((areaData, index) => {
             let area = this.areas[index];
-            let color: number;
-            if (areaData.owner === null) {
-                color = NEUTRAL_COLOR;
-            } else {
-                color = PLAYERS_COLORS[areaData.owner];
-            }
-
+            
             area.update(
                 areaData.owner,
                 areaData.dices,
             );
-            
-            area.drawBackground(color);
         });
 
         this.drawOrder.forEach(areaIndex => {
-            const area = this.areas[areaIndex];
-            let textureName: string;
-            if (area.owner === null) {
-                textureName = 'dice8';
-            } else {
-                textureName = 'dice' + area.owner;
-            }
-            area.drawDices(this.textures[textureName]);
+            this.redrawArea(areaIndex);
         });
+    }
+
+    getArea(index: number): Area {
+        return this.areas[index];
+    }
+
+    redrawArea(index) {
+        const area = this.areas[index];
+
+        let color: number;
+        if (area.owner === null) {
+            color = NEUTRAL_COLOR;
+        } else {
+            color = PLAYERS_COLORS[area.owner];
+        }
+        
+        area.drawBackground(color);
+
+        let textureName: string;
+        if (area.owner === null) {
+            textureName = 'dice8';
+        } else {
+            textureName = 'dice' + area.owner;
+        }
+        area.drawDices(this.textures[textureName]);
     }
 }

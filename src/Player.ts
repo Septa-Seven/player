@@ -5,7 +5,9 @@ enum CallbackMethods {
     Play = 'play',
     Stop = 'stop',
     Restart = 'start',
-    ToTurn = 'toTurn',
+    JumpToTurn = 'jumpToTurn',
+    Rewind = 'rewind',
+    ChangeTurn = 'changeTurn',
 }
 
 export class Player {
@@ -13,20 +15,22 @@ export class Player {
     private currentTurn: number;
     private timer: NodeJS.Timeout;
     private callbacks: Record<string, ((turn: TurnModel) => any)[]>;
-    private rewindSpeed: number;
+    rewindSpeed: number;
 
     constructor(session: Session) {
         this.callbacks = {
             'play': [],
             'stop': [],
             'restart': [],
-            'toTurn': [],
+            'jumpToTurn': [],
+            'rewind': [],
+            'changeTurn': [],
         }
 
         this.session = session;
 
         this.currentTurn = 0;
-        this.rewindSpeed = 50;
+        this.rewindSpeed = 100;
     }
     
     subscribe(method: string, callback: (turn: TurnModel) => any) {
@@ -43,7 +47,7 @@ export class Player {
     }
 
     restart() {
-        this.toTurn(0);
+        this.changeTurn(0);
         this.invokeCallbacks(CallbackMethods.Restart);
     }
 
@@ -53,12 +57,9 @@ export class Player {
         this.invokeCallbacks(CallbackMethods.Stop);
     }
 
-    toTurn(currentTurn: number) {
-        if (currentTurn < 0) {
-            currentTurn = this.session.turns.length + currentTurn;
-        }
-        this.currentTurn = currentTurn;
-        this.invokeCallbacks(CallbackMethods.ToTurn);
+    jumpToTurn(currentTurn: number) {
+        this.changeTurn(currentTurn);
+        this.invokeCallbacks(CallbackMethods.JumpToTurn);
     }
 
     getTurn(turn: number): TurnModel {
@@ -79,7 +80,16 @@ export class Player {
             this.stop();
             return;
         }
-        this.toTurn(this.currentTurn + 1);
+        this.changeTurn(this.currentTurn + 1);
+        this.invokeCallbacks(CallbackMethods.Rewind);
+    }
+
+    private changeTurn(currentTurn) {
+        if (currentTurn < 0) {
+            currentTurn = this.session.turns.length + currentTurn;
+        }
+        this.currentTurn = currentTurn;
+        this.invokeCallbacks(CallbackMethods.ChangeTurn);
     }
 
     private invokeCallbacks(method: CallbackMethods) {

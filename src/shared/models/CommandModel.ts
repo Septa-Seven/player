@@ -1,4 +1,4 @@
-enum CommandType {
+export enum CommandType {
     EndTurn = 'end_turn',
     Attack = 'attack',
 }
