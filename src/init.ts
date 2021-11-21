@@ -14,17 +14,24 @@ enum ButtonType {
     End = 'End',
 }
 
+enum ButtonIcon {
+    Play = 'play',
+    Stop = 'stop',
+    Start = 'step-backward',
+    End = 'step-forward',
+}
+
 export const createButtons = (container: HTMLElement) => {
     let buttons: Record<string, HTMLElement> = {};
     const buttonsContainer = document.createElement("div");    
-
     buttonsContainer.classList.add("buttons");
+
     for (let buttonType in ButtonType) {
         const button = document.createElement("button");
+
         button.setAttribute('id', buttonType)
         button.setAttribute('class', 'button')
-        createIcon(button, 'fa-user');
-        button.innerHTML = buttonType;
+        createIcon(button, ButtonIcon[buttonType]);
         buttons[buttonType] = button;
     }
 
@@ -120,12 +127,14 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
 
     player.subscribe('play', (turn) => {
         startButton.dataset.state = 'stop';
-        startButton.innerHTML = 'Stop';
+        startButton.innerHTML = '';
+        createIcon(startButton, ButtonIcon.Stop)
     });
 
     player.subscribe('stop', (turn) => {
         startButton.dataset.state = 'start';
-        startButton.innerHTML = 'Play';
+        startButton.innerHTML = '';
+        createIcon(startButton, ButtonIcon.Play)
     });
 
     startButton.addEventListener('click', () => {
