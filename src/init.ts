@@ -1,10 +1,7 @@
 import { Player } from "./Player";
-import { Session } from "./Session";
-import { Textures } from "./load";
-import { Info } from "./Info";
-import { GameScene } from "./GameScene";
-import {createIcon} from './utils/createIcon'
-import { CommandType } from "./shared/models/CommandModel";
+ 
+import { createIcon } from './utils/createIcon';
+const { CommandType, GameScene, Info, Textures } = require("dice-wars-game-scene");
 
 const SELECTED_AREA_COLOR = 0x111;
 

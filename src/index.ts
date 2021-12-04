@@ -1,8 +1,7 @@
 import './assets/styles/index.css';
-
-import { mockData } from './shared/models/mock';
-import { Session } from "./Session";
-import { DiceNames, loadInitialResources, Textures } from "./load";
+import { mockData } from './shared/mock';
+import {Session, loadResources, DiceNames} from "dice-wars-game-scene";
+import { initGame } from './init';
 
 const visualizerContainer = document.getElementById('visualizer');
 
@@ -10,14 +9,14 @@ const session = new Session(mockData);
 session.setPlayerName(0, 'Biba');
 session.setPlayerName(1, 'BOB');
 
-const textures = loadInitialResources([
-    {name: DiceNames.dice0, url: 'images/0.png'},
-    {name: DiceNames.dice1, url: 'images/1.png'},
-    {name: DiceNames.dice2, url: 'images/2.png'},
-    {name: DiceNames.dice3, url: 'images/3.png'},
-    {name: DiceNames.dice4, url: 'images/4.png'},
-    {name: DiceNames.dice5, url: 'images/5.png'},
-    {name: DiceNames.dice6, url: 'images/6.png'},
-    {name: DiceNames.dice7, url: 'images/7.png'},
-    {name: DiceNames.dice8, url: 'images/8.png'},
-], visualizerContainer, session);
+loadResources([
+    {name: DiceNames.dice0, url: 'assets/images/0.png'},
+    {name: DiceNames.dice1, url: 'assets/images/1.png'},
+    {name: DiceNames.dice2, url: 'assets/images/2.png'},
+    {name: DiceNames.dice3, url: 'assets/images/3.png'},
+    {name: DiceNames.dice4, url: 'assets/images/4.png'},
+    {name: DiceNames.dice5, url: 'assets/images/5.png'},
+    {name: DiceNames.dice6, url: 'assets/images/6.png'},
+    {name: DiceNames.dice7, url: 'assets/images/7.png'},
+    {name: DiceNames.dice8, url: 'assets/images/8.png'},
+], visualizerContainer, session, initGame);
