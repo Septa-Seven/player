@@ -4,19 +4,22 @@ export class TurnCounter {
 
     constructor(container: HTMLElement, turns: number){
         this.turns = turns;
-        const turnCounter = document.createElement("p");
-        turnCounter.classList.add('turn-counter');
+        const turnCounter = document.createElement("p")
+        turnCounter.classList.add('turn-counter')
 
-        const currentTurn = document.createElement("span");
+        const currentTurn = document.createElement("span")
         currentTurn.id = 'current-turn'
         currentTurn.innerHTML = '0'
     
 
-        const lastTurn = document.createElement("span");
+        const lastTurn = document.createElement("span")
         lastTurn.innerHTML = turns.toString()
 
+        const separator = document.createElement("span")
+        separator.classList.add('turn-counter__separator')
+
         turnCounter.append(currentTurn)
-        turnCounter.innerHTML += '/'
+        turnCounter.append(separator)
         turnCounter.append(lastTurn)
         container.append(turnCounter);
 
