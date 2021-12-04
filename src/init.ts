@@ -5,6 +5,7 @@ import { Info } from "./Info";
 import { GameScene } from "./GameScene";
 import {createIcon} from './utils/createIcon'
 import { CommandType } from "./shared/models/CommandModel";
+import { TurnCounter } from "./TurnCounter";
 
 const SELECTED_AREA_COLOR = 0x111;
 
@@ -60,6 +61,7 @@ const createSlider = (container: HTMLElement, turns: number): HTMLInputElement =
 
 const createControlContainer = (container: HTMLElement): HTMLElement => {
     const controlContainer = document.createElement('div');
+    controlContainer.classList.add('control-container')
     container.appendChild(controlContainer)
     return controlContainer;
 }
@@ -104,6 +106,7 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
     const gameSceneContainer = createGameSceneContainer(playerContainer);
 
     const controlContainer = createControlContainer(playerContainer);
+    const turnCounter = new TurnCounter(controlContainer, session.turns.length)
     const slider = createSlider(controlContainer, session.turns.length);
 
     const bottomContainer = createBottomContainer(controlContainer);
@@ -214,6 +217,8 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
     player.subscribe('changeTurn', (turn) => {
         // Update slider
         slider.value = turn.turn.toString();
+        console.log(turn)
+        turnCounter.setCurrentTurh(turn.turn)
     });
 
     // Turn slider
