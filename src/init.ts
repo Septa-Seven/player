@@ -1,10 +1,7 @@
 import { Player } from "./Player";
-import { Session } from "./Session";
-import { Textures } from "./load";
-import { Info } from "./Info";
-import { GameScene } from "./GameScene";
-import {createIcon} from './utils/createIcon'
-import { CommandType } from "./shared/models/CommandModel";
+
+import { createIcon } from './utils/createIcon';
+const { CommandType, GameScene, Info, Textures } = require("dice-wars-game-scene");
 import { TurnCounter } from "./TurnCounter";
 
 const SELECTED_AREA_COLOR = 0x111;
@@ -24,7 +21,7 @@ enum ButtonIcon {
 
 export const createButtons = (container: HTMLElement) => {
     let buttons: Record<string, HTMLElement> = {};
-    const buttonsContainer = document.createElement("div");    
+    const buttonsContainer = document.createElement("div");
     buttonsContainer.classList.add("buttons");
 
     for (let buttonType in ButtonType) {
@@ -53,7 +50,7 @@ const createSlider = (container: HTMLElement, turns: number): HTMLInputElement =
     slider.setAttribute('max', (turns - 1).toString());
     slider.setAttribute('value', '0');
     slider.setAttribute('step', '1');
-    
+
     container.appendChild(slider);
 
     return slider;
@@ -81,7 +78,7 @@ const createSpeedSlider = (container: HTMLElement): HTMLInputElement => {
     slider.setAttribute('max', '450');
     slider.setAttribute('value', '0');
     slider.setAttribute('step', '1');
-    
+
     container.appendChild(slider);
 
     return slider;
@@ -101,7 +98,7 @@ const createPlayerContainer = (container: HTMLElement): HTMLElement => {
     return playerContainer;
 }
 
-export const initGame = (container: HTMLElement, textures: Textures, session: Session): void => {
+export const initGame = (session: Session, container: HTMLElement, textures: Textures): void => {
     const playerContainer = createPlayerContainer(container);
     const gameSceneContainer = createGameSceneContainer(playerContainer);
 
@@ -112,7 +109,7 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
     const bottomContainer = createBottomContainer(controlContainer);
 
     const info = new Info(container, session.playerNames);
-    
+
     const gameScene = new GameScene(
         session.config,
         gameSceneContainer,
@@ -121,7 +118,7 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
 
     const player = new Player(session);
     gameScene.setState(player.getTurn(0).state);
-    
+
     // Buttons
     const buttons = createButtons(bottomContainer);
 
@@ -164,10 +161,10 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
         // Attack animation
         if (turn.transition && turn.transition.command.type == CommandType.Attack) {
             const command = turn.transition.command;
-            
+
             const fromIndex = command.data.from;
             const toIndex = command.data.to;
-            
+
             const areaFrom = gameScene.getArea(fromIndex);
             const areaTo = gameScene.getArea(toIndex);
 
@@ -198,26 +195,25 @@ export const initGame = (container: HTMLElement, textures: Textures, session: Se
     player.subscribe('jumpToTurn', (turn) => {
         // Fully update game scene
         gameScene.setState(turn.state);
-        
+
         // Update info
         turn.state.players.forEach(({id, savings}) => {
             info.setSavings(id, savings);
         });
-        
+
         if (turn.transition.error) {
             info.setError(
                 turn.transition.player_id,
                 turn.transition.error,
             )
         }
-        
+
         info.elimination(turn.state.players.map(({id}) => id));
     })
 
     player.subscribe('changeTurn', (turn) => {
         // Update slider
         slider.value = turn.turn.toString();
-        console.log(turn)
         turnCounter.setCurrentTurh(turn.turn)
     });
 

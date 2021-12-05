@@ -1,5 +1,4 @@
-import { Session } from './Session';
-import { TurnModel } from './shared/models/TurnModel';
+import { Session, TurnModel } from 'dice-wars-game-scene';
 
 enum CallbackMethods {
     Play = 'play',

@@ -36,6 +36,7 @@ module.exports = {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist'),
     },
+
     devServer: {
         static: {
             directory: path.join(__dirname, 'src', 'assets'),
@@ -44,9 +45,9 @@ module.exports = {
         port: 4200,
         hot: isDev,
     },
-
+    
     optimization: optimization(),
-
+    
     plugins: [
         new HTMLWebpackPlugin({
             template: './index.html',
@@ -54,7 +55,12 @@ module.exports = {
                 collapseWhiteSpace: isProd,
             }
         }),
-        new CleanWebpackPlugin()
+        new CleanWebpackPlugin(),
+        new CopyWebpackPlugin({
+            patterns: [
+                {from: 'node_modules/dice-wars-game-scene/dist/assets', to: 'assets'} 
+            ]
+        }),
     ],
 
     module: {
@@ -68,19 +74,8 @@ module.exports = {
                 use: ['file-loader']
             },
             {
-                test: /\.m?js$/,
-                exclude: /node_modules/,
-                use: {
-                    loader: "babel-loader",
-                    options: {
-                        presets: ['@babel/preset-env']
-                    }
-                }
-            },
-
-            {
                 test: /\.ts$/,
-                exclude: /node_modules/,
+                // exclude: /node_modules/,
                 use: {
                     loader: "babel-loader",
                     options: {

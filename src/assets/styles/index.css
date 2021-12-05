@@ -1,4 +1,6 @@
-.visualizer{
+@import 'dice-wars-game-scene/dist/main.css';
+
+.visualizer {
     width: 90vw;
     height: 90vh;
     border: 5px solid #F60264;
@@ -9,29 +11,52 @@
     justify-content: space-between;
 }
 
-.info {
+.scene {
+    width: 100%;
     height: 100%;
-    overflow-y: scroll;
-    width: 25%;
-    border-left: 1px solid black;
+    background: #85055A;
 }
 
-.record{
-    padding: 5px 15px;
-    border-bottom: 1px solid gray;
-    background: #5353ec;
+.control {
+    text-align: center;
+    padding: 20px 10px;
+}
+
+.bottom-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.buttons {
+    display: flex;
+    justify-content: center;
+    grid-column: 2 / 3;
+}
+
+.speed-slider{
+    width:  50%;
+}
+
+.button {
+    width: 80px;
+    height: 30px;
+    background-color: #F60264;
+    border: none;
     color: #fff;
+}
+
+.buttons .button {
+    margin-right: 20px;
+}
+
+.slider {
+    width: 90%;
+    margin: 5px 5% 15px 5%;
 }
 
 .player {
     width: 75%;
     height: 80%;
-}
-
-.control-container{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
 .turn-counter{
@@ -56,49 +81,4 @@
 
 .eliminated {
     background: red;
-}
-
-.scene{
-    width: 100%;
-    height: 100%;
-    background: #85055A;
-}
-
-.control{
-    text-align: center;
-    padding: 20px 10px;
-}
-
-.bottom-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-}
-
-.buttons{
-    display: flex;
-    justify-content: center;
-    grid-column: 2 / 3;
-}
-
-.speed-slider{
-    width:  50%;
-}
-
-.button{
-    width: 80px;
-    height: 30px;
-    background-color: #F60264;
-    border: none;
-    color: #fff;
-}
-
-
-
-.buttons .button {
-    margin-right: 20px;
-}
-
-.slider{
-    width: 90%;
-    margin: 5px 5% 15px 5%;
 }

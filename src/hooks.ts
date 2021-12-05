@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import {Area} from './GameScene'
+import { Area } from "dice-wars-game-scene";
 
 export class AreaTipManager {
     message: PIXI.Text;
