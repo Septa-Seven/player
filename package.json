@@ -32,6 +32,6 @@
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
     "cross-env": "^7.0.3",
-    "dice-wars-game-scene": "^1.0.1"
+    "dice-wars-game-scene": "^1.0.7"
   }
 }

@@ -96,7 +96,7 @@ const createPlayerContainer = (container: HTMLElement): HTMLElement => {
     return playerContainer;
 }
 
-export const initGame = (container: HTMLElement, textures: Textures, session: Session): void => {
+export const initGame = (session: Session, container: HTMLElement, textures: Textures): void => {
     const playerContainer = createPlayerContainer(container);
     const gameSceneContainer = createGameSceneContainer(playerContainer);
 
