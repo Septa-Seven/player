@@ -91,6 +91,13 @@ const createGameSceneContainer = (container: HTMLElement): HTMLElement => {
     return gameSceneContainer;
 }
 
+const createInfoContainer = (container: HTMLElement): HTMLElement => {
+    const infoContainer = document.createElement('div');
+    infoContainer.classList.add("infoContainer");
+    container.appendChild(infoContainer);
+    return infoContainer;
+}
+
 const createPlayerContainer = (container: HTMLElement): HTMLElement => {
     const playerContainer = document.createElement('div');
     playerContainer.classList.add("player");
@@ -108,7 +115,8 @@ export const initGame = (session: Session, container: HTMLElement, textures: Tex
 
     const bottomContainer = createBottomContainer(controlContainer);
 
-    const info = new Info(container, session.playerNames);
+    const infoContainer = createInfoContainer(container);
+    const info = new Info(infoContainer, session.playerNames);
 
     const gameScene = new GameScene(
         session.config,

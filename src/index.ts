@@ -9,7 +9,7 @@ const session = new Session(mockData);
 session.setPlayerName(0, 'Biba');
 session.setPlayerName(1, 'BOB');
 
-const initGameBinded = initGame.bind(null, session);
+const initGameBinded = initGame.bind(null, session, visualizerContainer);
 
 loadResources([
     {name: DiceNames.dice0, url: 'assets/images/0.png'},
@@ -21,4 +21,4 @@ loadResources([
     {name: DiceNames.dice6, url: 'assets/images/6.png'},
     {name: DiceNames.dice7, url: 'assets/images/7.png'},
     {name: DiceNames.dice8, url: 'assets/images/8.png'},
-], visualizerContainer, initGameBinded);
+], initGameBinded);
